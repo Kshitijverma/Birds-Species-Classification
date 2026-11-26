@@ -1,15 +1,15 @@
 import * as ort from "onnxruntime-web/wasm";
 import type { Region } from "./crop";
 import { INPUT_SIZE, preprocess } from "./preprocess";
-import { verdict, type Verdict } from "./verdict";
+import { averageBatch, verdict, type Rules, type Verdict } from "./verdict";
 
 /** Longest side photos are scaled to before preprocessing, roughly the size of the training photos. */
 const MAX_SIDE = 512;
 const BASE = import.meta.env.BASE_URL;
 
-export interface Labels {
-  species: string[];
-  threshold: number;
+/** web/public/model/labels.json: the Species, the rules for a Verdict, and whether to also score the mirror image. */
+interface Labels extends Rules {
+  flip: boolean;
 }
 
 let loading: Promise<{ session: ort.InferenceSession; labels: Labels }> | null = null;
@@ -45,10 +45,25 @@ async function readPixels(photo: Blob, region?: Region) {
   return ctx.getImageData(0, 0, width, height);
 }
 
+/** The photo's tensor followed by its mirror image (each row reversed), as one batch of 2. */
+function withMirror(x: Float32Array): Float32Array {
+  const n = INPUT_SIZE;
+  const out = new Float32Array(2 * x.length);
+  out.set(x);
+  for (let row = 0; row < x.length / n; row++) {
+    for (let col = 0; col < n; col++) out[x.length + row * n + col] = x[row * n + n - 1 - col];
+  }
+  return out;
+}
+
 /** Identify the bird in the photo, or only in `region` of it (in photo pixels) when the visitor cropped. */
 export async function identify(photo: Blob, region?: Region): Promise<Verdict> {
   const [{ session, labels }, pixels] = await Promise.all([load(), readPixels(photo, region)]);
-  const input = new ort.Tensor("float32", preprocess(pixels), [1, 3, INPUT_SIZE, INPUT_SIZE]);
+  const x = preprocess(pixels);
+  // With flip on, the photo and its mirror image run as one batch and their outputs are averaged.
+  const batch = labels.flip ? 2 : 1;
+  const input = new ort.Tensor("float32", labels.flip ? withMirror(x) : x, [batch, 3, INPUT_SIZE, INPUT_SIZE]);
   const out = await session.run({ input });
-  return verdict(out.probs.data as Float32Array, labels.species, labels.threshold);
+  const output = averageBatch({ probs: out.probs.data as Float32Array, distance: out.distance.data as Float32Array });
+  return verdict(output, labels);
 }

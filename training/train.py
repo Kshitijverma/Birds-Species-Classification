@@ -3,7 +3,13 @@
 1. Extract features for train (each photo plus its mirror image) and val,
    using the same preprocessing as the browser. Cached in checkpoints/.
 2. Fit a linear layer for a few weight-decay values; keep the one with the
-   best val accuracy. The test split is never read here.
+   best val accuracy.
+3. Fit a temperature on val (lowest negative log-likelihood); export.py
+   folds it into the head so Confidences are calibrated.
+4. Store each species' centroid of standardised train features, for the
+   Not-a-bird-I-know distance check (checkpoints/centroids.pt).
+
+The test split is never read here.
 
 Usage: python train.py [--cub PATH]
 """
@@ -17,6 +23,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
+from torch.nn import functional as F
 from torch.utils.data import DataLoader, Dataset
 
 import cub
@@ -80,6 +87,21 @@ def fit(x: torch.Tensor, y: torch.Tensor, weight_decay: float) -> nn.Linear:
     return head
 
 
+def fit_temperature(logits: torch.Tensor, y: torch.Tensor) -> float:
+    """The T minimising the negative log-likelihood of softmax(logits / T)."""
+    log_t = torch.zeros(1, requires_grad=True)
+    opt = torch.optim.LBFGS([log_t], lr=0.1, max_iter=200)
+
+    def closure():
+        opt.zero_grad()
+        loss = F.cross_entropy(logits / log_t.exp(), y)
+        loss.backward()
+        return loss
+
+    opt.step(closure)
+    return float(log_t.exp())
+
+
 @torch.no_grad()
 def accuracy(head: nn.Linear, x: torch.Tensor, y: torch.Tensor) -> float:
     return float((head(x).argmax(1) == y).float().mean())
@@ -120,11 +142,25 @@ def main() -> None:
         folded.bias.copy_(best.bias - (best.weight * (mean / std)).sum(1))
     assert abs(accuracy(folded, vx, vy) - results[wd][0]) < 1e-3
 
+    with torch.no_grad():
+        val_logits = best(vxn)
+    temperature = fit_temperature(val_logits, vy)
+    with torch.no_grad():
+        nll = (F.cross_entropy(val_logits, vy).item(), F.cross_entropy(val_logits / temperature, vy).item())
+    print(f"temperature {temperature:.3f}: val NLL {nll[0]:.3f} -> {nll[1]:.3f}", flush=True)
+
+    # Centroid of each species' standardised train features (photos and mirrors).
+    counts = torch.bincount(ty, minlength=SPECIES).clamp_min(1).unsqueeze(1)
+    centroids = torch.zeros(SPECIES, FEATURES).index_add_(0, ty, txn) / counts
+
     torch.save(folded.state_dict(), CHECKPOINTS / "head.pt")
+    torch.save({"mean": mean, "std": std, "centroids": centroids}, CHECKPOINTS / "centroids.pt")
     (CHECKPOINTS / "train.json").write_text(json.dumps(
         {"weight_decay": wd, "val_top1": results[wd][0],
-         "sweep": {str(k): v[0] for k, v in results.items()}}, indent=2))
-    print(f"kept weight decay {wd:g}, val top-1 {results[wd][0]:.3f} -> checkpoints/head.pt")
+         "sweep": {str(k): v[0] for k, v in results.items()},
+         "temperature": temperature, "val_nll": nll[0], "val_nll_calibrated": nll[1]}, indent=2))
+    print(f"kept weight decay {wd:g}, val top-1 {results[wd][0]:.3f}, temperature {temperature:.3f}"
+          " -> checkpoints/head.pt, centroids.pt")
 
 
 if __name__ == "__main__":

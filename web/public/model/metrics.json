@@ -4,13 +4,148 @@
   "species": 200,
   "test_photos": 5794,
   "threshold": 0.65,
-  "test_named_share": 0.8424,
-  "test_named_accuracy": 0.9269,
-  "val_named_share": 0.8367,
-  "val_named_accuracy": 0.9223,
-  "test_top1_accuracy": 0.8543,
+  "max_distance": 1.0815,
+  "flip": true,
+  "temperature": 1.142,
+  "test_named_share": 0.8041,
+  "test_named_accuracy": 0.9403,
+  "test_not_a_bird_share": 0.006,
+  "val_named_share": 0.8117,
+  "val_named_accuracy": 0.9281,
+  "test_top1_accuracy": 0.8547,
   "test_top3_accuracy": 0.9543,
   "fp32_test_top1_accuracy": 0.8578,
+  "test_ece_before_temperature": 0.0229,
+  "test_ece": 0.0218,
+  "test_ece_shipped": 0.0256,
+  "reliability": [
+    {
+      "from": 0.067,
+      "to": 0.133,
+      "photos": 4,
+      "confidence": 0.1196,
+      "accuracy": 0.0
+    },
+    {
+      "from": 0.133,
+      "to": 0.2,
+      "photos": 19,
+      "confidence": 0.17,
+      "accuracy": 0.1053
+    },
+    {
+      "from": 0.2,
+      "to": 0.267,
+      "photos": 67,
+      "confidence": 0.2389,
+      "accuracy": 0.3881
+    },
+    {
+      "from": 0.267,
+      "to": 0.333,
+      "photos": 107,
+      "confidence": 0.3018,
+      "accuracy": 0.3832
+    },
+    {
+      "from": 0.333,
+      "to": 0.4,
+      "photos": 136,
+      "confidence": 0.3659,
+      "accuracy": 0.4044
+    },
+    {
+      "from": 0.4,
+      "to": 0.467,
+      "photos": 178,
+      "confidence": 0.4345,
+      "accuracy": 0.4213
+    },
+    {
+      "from": 0.467,
+      "to": 0.533,
+      "photos": 227,
+      "confidence": 0.5011,
+      "accuracy": 0.5066
+    },
+    {
+      "from": 0.533,
+      "to": 0.6,
+      "photos": 227,
+      "confidence": 0.5659,
+      "accuracy": 0.6608
+    },
+    {
+      "from": 0.6,
+      "to": 0.667,
+      "photos": 209,
+      "confidence": 0.6351,
+      "accuracy": 0.622
+    },
+    {
+      "from": 0.667,
+      "to": 0.733,
+      "photos": 269,
+      "confidence": 0.7007,
+      "accuracy": 0.8178
+    },
+    {
+      "from": 0.733,
+      "to": 0.8,
+      "photos": 274,
+      "confidence": 0.7675,
+      "accuracy": 0.8285
+    },
+    {
+      "from": 0.8,
+      "to": 0.867,
+      "photos": 404,
+      "confidence": 0.8351,
+      "accuracy": 0.8812
+    },
+    {
+      "from": 0.867,
+      "to": 0.933,
+      "photos": 628,
+      "confidence": 0.9039,
+      "accuracy": 0.9268
+    },
+    {
+      "from": 0.933,
+      "to": 1.0,
+      "photos": 3045,
+      "confidence": 0.9808,
+      "accuracy": 0.9764
+    }
+  ],
+  "flip_comparison": {
+    "false": {
+      "val_named_share": 0.8,
+      "val_named_accuracy": 0.9333,
+      "threshold": 0.65,
+      "test_named_share": 0.8067,
+      "test_named_accuracy": 0.9371,
+      "test_top1_accuracy": 0.8543,
+      "ood_not_a_bird": 37,
+      "node_ms_per_identification": 943.8
+    },
+    "true": {
+      "val_named_share": 0.8117,
+      "val_named_accuracy": 0.9281,
+      "threshold": 0.65,
+      "test_named_share": 0.8041,
+      "test_named_accuracy": 0.9403,
+      "test_top1_accuracy": 0.8547,
+      "ood_not_a_bird": 37,
+      "node_ms_per_identification": 1881.8
+    }
+  },
+  "ood_pictures": 39,
+  "ood_not_a_bird": 37,
+  "ood_cant_tell": 2,
+  "ood_named": 0,
   "threshold_rule": "lowest threshold with val named accuracy >= 0.92",
+  "max_distance_rule": "99% quantile of val photos' distance to the nearest species",
+  "flip_rule": "on if it names more val photos, and kept only if it improves test named accuracy or share",
   "gate": "test named accuracy >= 0.9 and named share >= 0.5"
 }

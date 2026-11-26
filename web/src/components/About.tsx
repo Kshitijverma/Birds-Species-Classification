@@ -11,6 +11,17 @@ interface Metrics {
   test_named_accuracy: number;
   test_top1_accuracy: number;
   test_top3_accuracy: number;
+  test_ece_shipped: number;
+  ood_pictures: number;
+  ood_not_a_bird: number;
+  reliability: Bin[];
+}
+
+/** Test photos grouped by the Confidence of the top Species. */
+interface Bin {
+  photos: number;
+  confidence: number;
+  accuracy: number;
 }
 
 interface Example {
@@ -57,12 +68,25 @@ export function About() {
             Top-1 accuracy with no confidence cut-off: {pct(m.test_top1_accuracy)}. It names a species at
             {" "}{pct(m.threshold)} confidence or more.
           </p>
+
+          <h2>Can you trust the percentage?</h2>
+          <p>
+            Yes, within a few points. Each dot below is a group of test photos with similar confidence: a dot
+            on the diagonal means that, of species named at that confidence, that share were right. On
+            average confidence is {(m.test_ece_shipped * 100).toFixed(1)} points away from how often it's right.
+          </p>
+          <Reliability bins={m.reliability} />
         </>
       )}
 
       <h2>Limits</h2>
       <ul>
-        <li>It knows 200 species, mostly North American. Any other bird, or a non-bird, will get a wrong guess or <em>Can't be sure</em>.</li>
+        <li>
+          It knows 200 species, mostly North American. A photo that looks like none of them gets{" "}
+          <em>Not a bird I know</em>
+          {m && <> ({m.ood_not_a_bird} of {m.ood_pictures} test pictures of noise, plain colours, animals and plants did)</>}.
+          Some non-birds still slip through, and a bird outside the 200 will get a wrong guess or <em>Can't be sure</em>.
+        </li>
         <li>Close, sharp, side-on photos work best. Distant birds, silhouettes and flocks are hard.</li>
         <li>Male, female and juvenile plumages can look very different, which makes some species harder.</li>
       </ul>
@@ -109,5 +133,35 @@ export function About() {
         the repo's <a href="https://github.com/Kshitijverma/Birds-Species-Classification/tree/master/legacy">legacy folder</a>.
       </p>
     </section>
+  );
+}
+
+/** Reliability chart: accuracy against Confidence, one dot per group of photos (area ~ photos). */
+function Reliability({ bins }: { bins: Bin[] }) {
+  const size = 200;
+  const pad = 28;
+  const at = (v: number) => pad + v * size;
+  const most = Math.max(...bins.map((b) => b.photos));
+  const points = bins.map((b) => `${at(b.confidence)},${at(1 - b.accuracy)}`).join(" ");
+  return (
+    <svg
+      className="reliability"
+      viewBox={`0 0 ${size + pad * 2} ${size + pad * 2}`}
+      role="img"
+      aria-label="Reliability chart: accuracy against confidence for groups of test photos"
+    >
+      <rect x={pad} y={pad} width={size} height={size} className="frame" />
+      <line x1={at(0)} y1={at(1)} x2={at(1)} y2={at(0)} className="ideal" />
+      <polyline points={points} className="trace" />
+      {bins.map((b) => (
+        <circle key={b.confidence} cx={at(b.confidence)} cy={at(1 - b.accuracy)} r={2 + 6 * Math.sqrt(b.photos / most)}>
+          <title>{`${b.photos} photos: ${pct(b.confidence)} confident, ${pct(b.accuracy)} right`}</title>
+        </circle>
+      ))}
+      <text x={pad + size / 2} y={size + pad * 2 - 6} textAnchor="middle">confidence</text>
+      <text x={10} y={pad + size / 2} textAnchor="middle" transform={`rotate(-90 10 ${pad + size / 2})`}>right</text>
+      <text x={pad} y={size + pad + 12} textAnchor="middle">0</text>
+      <text x={pad + size} y={size + pad + 12} textAnchor="middle">100%</text>
+    </svg>
   );
 }

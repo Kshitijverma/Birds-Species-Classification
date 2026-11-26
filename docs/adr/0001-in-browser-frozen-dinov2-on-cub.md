@@ -12,5 +12,5 @@ The 2020 project classified CUB-200-2011 birds from hand-labelled attributes (sc
 ## Consequences
 
 - The ship gate was fixed before the test set was first scored. The Threshold is the lowest value where named Verdicts on val are at least 92% right. Shipping needs named Verdicts on test to be at least 90% right, with at least half of test photos named. All of this is measured in onnxruntime-web, whose int8 kernels round differently from native onnxruntime.
-- The model knows only these 200 Species. A non-bird, or a bird outside the list, gets a wrong guess or Can't be sure. The site says so instead of adding a second "is it a bird?" model.
+- The model knows only these 200 Species. A non-bird, or a bird outside the list, gets a wrong guess or Can't be sure. The site says so instead of adding a second "is it a bird?" model. (Later, #7: rather than a second model, the same model also outputs how far a photo is from the nearest species, and a photo too far from all of them gets *Not a bird I know*. The cut-off is chosen on val like the Threshold.)
 - Routing uses URL hashes (`#/notebook`), because GitHub Pages can't rewrite paths to `index.html`.

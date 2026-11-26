@@ -15,7 +15,9 @@ function fixture() {
   const png = PNG.sync.read(readFileSync(here("./fixtures/fixture.png")));
   const buf = readFileSync(here("./fixtures/input.bin"));
   const pythonInput = new Float32Array(buf.buffer, buf.byteOffset, buf.byteLength / 4);
-  const expected: number[] = JSON.parse(readFileSync(here("./fixtures/expected.json"), "utf8")).probs;
+  const expected: { probs: number[]; distance: number } = JSON.parse(
+    readFileSync(here("./fixtures/expected.json"), "utf8"),
+  );
   return { png, pythonInput, expected };
 }
 
@@ -37,7 +39,7 @@ describe("preprocessing parity with training/preprocess.py", () => {
 // upgrade that changes the answers. Loose tolerance: int8 kernel rounding may
 // shift between versions without changing the Verdict.
 describe("model in onnxruntime-web", () => {
-  it("gives the fixture photo the Confidences recorded at export", async () => {
+  it("gives the fixture photo the Confidences and distance recorded at export", async () => {
     const { pythonInput, expected } = fixture();
     ort.env.wasm.numThreads = 1;
     const session = await ort.InferenceSession.create(readFileSync(here("../public/model/model.onnx")));
@@ -45,9 +47,11 @@ describe("model in onnxruntime-web", () => {
       input: new ort.Tensor("float32", pythonInput, [1, 3, INPUT_SIZE, INPUT_SIZE]),
     });
     const probs = Array.from(out.probs.data as Float32Array);
+    const distance = (out.distance.data as Float32Array)[0];
 
-    expect(probs).toHaveLength(expected.length);
-    expect(argmax(probs)).toBe(argmax(expected));
-    probs.forEach((p, i) => expect(Math.abs(p - expected[i])).toBeLessThan(2e-2));
+    expect(probs).toHaveLength(expected.probs.length);
+    expect(argmax(probs)).toBe(argmax(expected.probs));
+    probs.forEach((p, i) => expect(Math.abs(p - expected.probs[i])).toBeLessThan(2e-2));
+    expect(Math.abs(distance - expected.distance)).toBeLessThan(2e-2);
   }, 60_000);
 });

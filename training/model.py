@@ -28,12 +28,44 @@ def features(backbone: nn.Module, x: torch.Tensor) -> torch.Tensor:
     return torch.cat([tokens[:, 0], tokens[:, prefix:].mean(1)], dim=1)
 
 
-class BirdClassifier(nn.Module):
-    """Image [N,3,224,224] -> Confidences [N,200] (softmax built in, for ONNX export)."""
+class SpeciesDistance(nn.Module):
+    """Features [N,768] -> distance to the nearest species centroid [N].
 
-    def __init__(self, backbone: nn.Module, head: nn.Linear):
+    Features are standardised with the train mean/std; each centroid is the
+    mean standardised feature of one species' train photos. The distance is
+    Euclidean, divided by sqrt(768) (a root-mean-square per feature), so it
+    reads the same whatever the feature width.
+    """
+
+    def __init__(self, mean: torch.Tensor, std: torch.Tensor, centroids: torch.Tensor):
         super().__init__()
-        self.backbone, self.head = backbone, head
+        self.register_buffer("mean", mean.clone())
+        self.register_buffer("std", std.clone())
+        self.register_buffer("centroids_t", centroids.t().contiguous())
+        self.register_buffer("centroid_sq", (centroids * centroids).sum(1))
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return torch.softmax(self.head(features(self.backbone, x)), dim=1)
+    def forward(self, f: torch.Tensor) -> torch.Tensor:
+        z = (f - self.mean) / self.std
+        sq = (z * z).sum(1, keepdim=True) - 2 * (z @ self.centroids_t) + self.centroid_sq
+        return (sq.min(1).values.clamp_min(0) / f.shape[1]).sqrt()
+
+
+class BirdClassifier(nn.Module):
+    """Image [N,3,224,224] -> (Confidences [N,200], Distance [N]), for ONNX export.
+
+    The softmax and the temperature are built in: the head's weights and bias
+    are divided by the temperature.
+    """
+
+    def __init__(self, backbone: nn.Module, head: nn.Linear, temperature: float, distance: SpeciesDistance):
+        super().__init__()
+        self.backbone = backbone
+        self.head = nn.Linear(head.in_features, head.out_features)
+        with torch.no_grad():
+            self.head.weight.copy_(head.weight / temperature)
+            self.head.bias.copy_(head.bias / temperature)
+        self.distance = distance
+
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        f = features(self.backbone, x)
+        return torch.softmax(self.head(f), dim=1), self.distance(f)

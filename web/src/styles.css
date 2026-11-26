@@ -329,6 +329,12 @@ button.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft)
 .stats div { background: var(--card); border-radius: 0.8rem; padding: 1rem; box-shadow: var(--shadow); }
 .stats dt { font: 700 2rem var(--serif); color: var(--accent); }
 .stats dd { margin: 0.2rem 0 0; font-size: 0.9rem; color: var(--ink-soft); }
+.reliability { display: block; width: 100%; max-width: 18rem; margin: 0.5rem 0 1rem; }
+.reliability .frame { fill: var(--card); stroke: var(--rule); }
+.reliability .ideal { stroke: var(--ink-soft); stroke-dasharray: 4 4; }
+.reliability .trace { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+.reliability circle { fill: var(--accent); fill-opacity: 0.75; }
+.reliability text { font: 11px var(--mono); fill: var(--ink-soft); }
 
 .credits summary { cursor: pointer; font-weight: 500; }
 .credits ul { font-size: 0.85rem; columns: 2 16rem; column-gap: 1.5rem; padding-left: 1.1rem; }

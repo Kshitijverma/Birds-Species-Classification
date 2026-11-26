@@ -34,7 +34,7 @@ export function Notebook({ entries, onRemove, onAnnotate, onReplaceAll }: {
             <li key={e.species} className="sighting">
               <img src={e.thumb} alt="" />
               <div>
-                <h3>{e.species}</h3>
+                <h2>{e.species}</h2>
                 <p className="muted">
                   First seen {date(e.firstSeen)}
                   {e.count > 1 && ` · ${e.count} sightings`}
@@ -44,9 +44,9 @@ export function Notebook({ entries, onRemove, onAnnotate, onReplaceAll }: {
               <button
                 className="link remove"
                 onClick={() => confirm(`Remove ${e.species} from your notebook?`) && onRemove(e.species)}
-                aria-label={`Remove ${e.species}`}
               >
-                ×
+                <span aria-hidden>×</span>
+                <span className="sr-only">Remove {e.species}</span>
               </button>
               {editing === e.species ? (
                 <NoteEditor
@@ -207,11 +207,16 @@ function Backup({ entries, onReplaceAll }: { entries: Sighting[]; onReplaceAll: 
 
 export function Progress({ seen }: { seen: number }) {
   return (
-    <div className="progress" aria-label={`${seen} of ${TOTAL} species`}>
-      <div className="progress-text">
+    <div className="progress">
+      <div className="progress-text" id="progress-text">
         <strong>{seen}</strong> of {TOTAL} species spotted
       </div>
-      <div className="bar"><span style={{ width: `${(seen / TOTAL) * 100}%` }} /></div>
+      <div
+        className="bar" role="progressbar" aria-labelledby="progress-text"
+        aria-valuemin={0} aria-valuemax={TOTAL} aria-valuenow={seen}
+      >
+        <span style={{ width: `${(seen / TOTAL) * 100}%` }} />
+      </div>
     </div>
   );
 }

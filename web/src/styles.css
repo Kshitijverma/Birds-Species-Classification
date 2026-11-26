@@ -6,6 +6,7 @@
   --ink: #23271f;
   --ink-soft: #5d6156;
   --rule: #d8cfba;
+  --field: #84867c;       /* text field borders: 3:1 against paper and card */
   --accent: #b4432b;      /* cardinal red */
   --accent-ink: #fbf8f1;
   --leaf: #3f6b4f;        /* also-possible bars */
@@ -24,6 +25,7 @@
     --ink: #ece6d8;
     --ink-soft: #a29d90;
     --rule: #323a3f;
+    --field: #7a7971;
     --accent: #e0775c;
     --accent-ink: #14181b;
     --leaf: #8cbf9c;
@@ -45,6 +47,12 @@ body {
   font: 16px/1.55 var(--sans);
 }
 a { color: var(--accent); text-underline-offset: 3px; }
+/* One keyboard focus ring, in the accent, visible on paper, cards and photos in both themes. */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
 h1, h2, h3 { font-family: var(--serif); font-weight: 600; line-height: 1.15; margin: 0; }
 h1 { font-size: clamp(2rem, 6vw, 3.1rem); letter-spacing: -0.01em; }
 .muted { color: var(--ink-soft); }
@@ -164,7 +172,7 @@ button.link {
   position: absolute; cursor: move; touch-action: none;
   outline: 2px solid #fffdf8; box-shadow: inset 0 0 0 1px rgba(20, 18, 12, 0.35);
 }
-.crop-box:focus-visible { outline: 3px solid var(--accent); }
+.crop-box:focus-visible { outline: 3px solid var(--accent); outline-offset: 0; }
 .crop-layer.static .crop-box { outline-style: dashed; box-shadow: none; }
 /* Corner handles: a viewfinder bracket in a touch target centred on the corner.
    On a small box the targets shrink so the middle can still be dragged. */
@@ -247,7 +255,7 @@ button.link {
   padding: 0.6rem; background: var(--card); border-radius: 0.7rem; box-shadow: var(--shadow);
 }
 .sighting img { width: 4rem; height: 4rem; border-radius: 0.45rem; object-fit: cover; }
-.sighting h3 { font-size: 1.05rem; }
+.sighting h2, .sighting h3 { font-size: 1.05rem; }
 .sighting p { margin: 0.15rem 0 0; font-size: 0.82rem; }
 button.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft); padding: 0 0.3rem; align-self: start; }
 .sighting .place { color: var(--leaf); font-weight: 500; }
@@ -262,7 +270,7 @@ button.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft)
 .note-editor label { display: grid; gap: 0.1rem; }
 .note-editor .eyebrow { margin: 0; }
 .note-editor input, .note-editor textarea {
-  width: 100%; padding: 0.45rem 0.6rem; border: 1.5px solid var(--rule); border-radius: 0.5rem;
+  width: 100%; padding: 0.45rem 0.6rem; border: 1.5px solid var(--field); border-radius: 0.5rem;
   background: var(--paper); color: var(--ink); font: 0.92rem/1.4 var(--sans); resize: vertical;
 }
 .note-editor input:focus, .note-editor textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
@@ -287,7 +295,7 @@ button.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft)
 .species-index > .muted { max-width: 36rem; }
 .search {
   width: 100%; padding: 0.7rem 0.9rem; margin-bottom: 1.25rem;
-  border: 1.5px solid var(--rule); border-radius: 0.6rem; background: var(--card); color: var(--ink);
+  border: 1.5px solid var(--field); border-radius: 0.6rem; background: var(--card); color: var(--ink);
   font: 1rem var(--sans);
 }
 .search:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }

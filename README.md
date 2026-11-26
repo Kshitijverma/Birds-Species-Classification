@@ -33,6 +33,7 @@ All numbers, the Threshold and the max distance are in [`web/public/model/metric
   - `npm test` runs the verdict rule tests and the preprocessing parity test.
   - `npm run build` builds it to `web/dist`.
   - `npm run e2e` (after a build) serves `web/dist` under `/Birds-Species-Classification/` and runs the Playwright tests in `web/e2e/`: a smoke test (two example photos, a noise image, the notebook, every page, no console errors) and an axe accessibility check of each page in light and dark. It needs Chromium once: `npx playwright install --only-shell chromium`.
+  - The model runs in a Web Worker (`web/src/model.worker.ts`): it reads the photo, preprocesses it and runs ONNX Runtime there, so the page stays responsive while a photo is scored. It runs single-threaded, since multi-threaded wasm needs cross-origin isolation, which GitHub Pages can't turn on.
   - `web/pwa/` is the service worker that makes the site installable and offline: the site is cached on the first visit, the model on the first identification. Each build lists its files' content hashes in `sw.js`, so a retrained model replaces the cached one.
 - `training/` holds the reproducible training pipeline (Python; a 4-core CPU is enough).
 - `legacy/` is the original 2020 project: attribute-based classifiers, a Keras CNN, and the report.

@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+import { speciesHref } from "../species";
 import type { Match, Verdict } from "../verdict";
+import { ShareButton } from "./ShareButton";
 
 const pct = (c: number) => (c >= 0.995 ? ">99%" : c < 0.01 ? "<1%" : `${Math.round(c * 100)}%`);
 const barWidth = (c: number) => `${(c * 100).toFixed(1)}%`;
 
-export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (species: string) => Promise<void> }) {
+export function FieldCard({ verdict, onRecord, photo }: {
+  verdict: Verdict;
+  onRecord: (species: string) => Promise<void>;
+  photo?: Blob;
+}) {
   const [saved, setSaved] = useState<string | null>(null);
   const card = useRef<HTMLElement>(null);
   useEffect(() => card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), [verdict]);
@@ -21,7 +27,7 @@ export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (
         <h2 className="species">Not a bird I know</h2>
         <p className="muted">
           This photo doesn't look like any of the 200 species it knows. It may not be a bird, or the bird may be
-          too small or hidden to see. Try a closer photo with the bird filling more of the frame.
+          too small or hidden to see. Try cropping to the bird, or a closer photo.
         </p>
       </article>
     );
@@ -50,13 +56,8 @@ export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (
         <div>
           <p className="eyebrow">Identified as</p>
           <h2 className="species">{verdict.species}</h2>
-          <a
-            className="more"
-            href={`https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(verdict.species)}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Read about it ↗
+          <a className="more" href={speciesHref(verdict.species)}>
+            Read about it →
           </a>
         </div>
       </div>
@@ -67,6 +68,7 @@ export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (
         </>
       )}
       <div className="card-actions">
+        {photo && <ShareButton species={verdict.species} confidence={verdict.confidence} photo={photo} />}
         {saved === verdict.species ? (
           <span className="saved">✓ In your notebook</span>
         ) : (

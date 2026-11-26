@@ -1,4 +1,5 @@
 import * as ort from "onnxruntime-web/wasm";
+import type { Region } from "./crop";
 import { INPUT_SIZE, preprocess } from "./preprocess";
 import { averageBatch, verdict, type Rules, type Verdict } from "./verdict";
 
@@ -26,16 +27,20 @@ export function load() {
   return loading;
 }
 
-/** Draw the photo at most MAX_SIDE px on its longest side and read back RGBA pixels. */
-async function readPixels(photo: Blob) {
+/**
+ * Draw the photo (or just `region` of it, in photo pixels) at most MAX_SIDE px
+ * on its longest side and read back RGBA pixels.
+ */
+async function readPixels(photo: Blob, region?: Region) {
   const bitmap = await createImageBitmap(photo);
-  const scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
+  const { x, y, width: w, height: h } = region ?? { x: 0, y: 0, width: bitmap.width, height: bitmap.height };
+  const scale = Math.min(1, MAX_SIDE / Math.max(w, h));
+  const width = Math.max(1, Math.round(w * scale));
+  const height = Math.max(1, Math.round(h * scale));
   const canvas = new OffscreenCanvas(width, height);
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas 2D is not available in this browser.");
-  ctx.drawImage(bitmap, 0, 0, width, height);
+  ctx.drawImage(bitmap, x, y, w, h, 0, 0, width, height);
   bitmap.close();
   return ctx.getImageData(0, 0, width, height);
 }
@@ -51,8 +56,9 @@ function withMirror(x: Float32Array): Float32Array {
   return out;
 }
 
-export async function identify(photo: Blob): Promise<Verdict> {
-  const [{ session, labels }, pixels] = await Promise.all([load(), readPixels(photo)]);
+/** Identify the bird in the photo, or only in `region` of it (in photo pixels) when the visitor cropped. */
+export async function identify(photo: Blob, region?: Region): Promise<Verdict> {
+  const [{ session, labels }, pixels] = await Promise.all([load(), readPixels(photo, region)]);
   const x = preprocess(pixels);
   // With flip on, the photo and its mirror image run as one batch and their outputs are averaged.
   const batch = labels.flip ? 2 : 1;

@@ -10,6 +10,9 @@ Tells a visitor which bird species is in a photo they upload, out of the 200 spe
 One of the 200 answers the classifier can give, as listed in CUB-200-2011 and shown under a cleaned-up common name (e.g. "Brewer's Blackbird" for CUB's `Brewer_Blackbird`). A few CUB "species" are really a genus (Phoebe, Roadrunner) or a subspecies (Myrtle Warbler); they are still one Species each.
 _Avoid_: Class, label, category
 
+**Species page**:
+The page about one Species (`#/species/<slug>`): its photo, a short description, the visitor's Sightings of it, and links out to Wikipedia and All About Birds. Its data is fetched at build time, so the site makes no calls to outside APIs.
+
 ### Answers
 
 **Verdict**:
@@ -55,8 +58,19 @@ The visitor's own list of Species they have recorded, kept only in their browser
 _Avoid_: History, log
 
 **Sighting**:
-One Species in the Notebook, with when it was first and last recorded and a small thumbnail of the first photo.
+One Species in the Notebook, with when it was first and last recorded, how many times, a small thumbnail of the first photo, and the visitor's optional note and place.
 _Avoid_: Entry, record
+
+**Export**:
+A copy of the Notebook saved as a file: JSON (the full backup, thumbnails included, which Import reads back exactly) or CSV (for spreadsheets, without thumbnails).
+_Avoid_: Backup file, dump
+
+**Import**:
+Reading a JSON Export back into the Notebook, either replacing it or merging into it by Species. A file with any problem is rejected whole.
+
+**Share card**:
+A PNG picture of a named Verdict (photo, Species, Confidence, date, "Field Guide" branding) that the visitor can share or save.
+_Avoid_: Screenshot, image export
 
 ### Data
 

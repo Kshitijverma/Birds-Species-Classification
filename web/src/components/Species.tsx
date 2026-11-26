@@ -1,20 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { groupByKind, speciesHref } from "../species";
 import { Progress } from "./Notebook";
 
 const BASE = import.meta.env.BASE_URL;
-
-/** Group names by their last word ("Song Sparrow" -> "Sparrows"), the way field guides cluster them. */
-function groupByKind(names: string[]) {
-  const groups = new Map<string, string[]>();
-  for (const name of names) {
-    const last = name.split(/[\s-]/).pop() ?? name;
-    const kind = last.endsWith("ss") ? `${last}es` : last.endsWith("s") ? last : `${last}s`;
-    groups.set(kind, [...(groups.get(kind) ?? []), name]);
-  }
-  const big = [...groups].filter(([, v]) => v.length > 1).sort(([a], [b]) => a.localeCompare(b));
-  const singles = [...groups].filter(([, v]) => v.length === 1).flatMap(([, v]) => v).sort();
-  return singles.length ? [...big, ["Others", singles] as [string, string[]]] : big;
-}
 
 export function Species({ seen }: { seen: Set<string> }) {
   const [names, setNames] = useState<string[]>([]);
@@ -50,8 +38,10 @@ export function Species({ seen }: { seen: Set<string> }) {
           <ul>
             {members.map((n) => (
               <li key={n} className={seen.has(n) ? "seen" : ""}>
-                {seen.has(n) && <span aria-label="spotted">✓ </span>}
-                {n}
+                <a href={speciesHref(n)}>
+                  {seen.has(n) && <span aria-label="spotted">✓ </span>}
+                  {n}
+                </a>
               </li>
             ))}
           </ul>

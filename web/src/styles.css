@@ -142,6 +142,51 @@ button.link {
   animation: scan 1.6s ease-in-out infinite alternate;
 }
 @keyframes scan { to { top: calc(100% - 1.8rem); } }
+.snapshot figcaption {
+  position: absolute; left: 0; right: 0; bottom: 0.2rem; text-align: center;
+  font: 500 0.72rem/1.4rem var(--mono); letter-spacing: 0.08em; text-transform: uppercase;
+  color: #5d6156; /* the snapshot stays paper-white in dark mode too */
+}
+
+/* crop to the bird: the snapshot straightens while the box is placed */
+.snapshot { transition: transform 0.25s ease-out; }
+.snapshot.cropping { transform: none; }
+.frame { position: relative; line-height: 0; }
+.crop-layer {
+  position: absolute; inset: 0;
+  cursor: crosshair; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.crop-layer.static { pointer-events: none; }
+.crop-shade { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.crop-shade > div { position: absolute; box-shadow: 0 0 0 100vmax rgba(20, 18, 12, 0.55); }
+.crop-layer.static .crop-shade > div { box-shadow: 0 0 0 100vmax rgba(20, 18, 12, 0.35); }
+.crop-box {
+  position: absolute; cursor: move; touch-action: none;
+  outline: 2px solid #fffdf8; box-shadow: inset 0 0 0 1px rgba(20, 18, 12, 0.35);
+}
+.crop-box:focus-visible { outline: 3px solid var(--accent); }
+.crop-layer.static .crop-box { outline-style: dashed; box-shadow: none; }
+/* Corner handles: a viewfinder bracket in a touch target centred on the corner.
+   On a small box the targets shrink so the middle can still be dragged. */
+.crop-handle {
+  position: absolute; width: min(2.75rem, 60%); height: min(2.75rem, 60%); padding: 0; border: 0;
+  background: none; touch-action: none; -webkit-tap-highlight-color: transparent;
+}
+.crop-handle::before {
+  content: ""; position: absolute; width: 1.1rem; height: 1.1rem; max-width: 80%; max-height: 80%;
+  border: 0 solid var(--accent); filter: drop-shadow(0 0 1px rgba(0, 0, 0, 0.6));
+}
+.crop-handle:focus-visible { outline: none; }
+.crop-handle:focus-visible::before { border-color: #fffdf8; }
+.crop-handle.nw { left: 0; top: 0; transform: translate(-50%, -50%); cursor: nwse-resize; }
+.crop-handle.ne { right: 0; top: 0; transform: translate(50%, -50%); cursor: nesw-resize; }
+.crop-handle.sw { left: 0; bottom: 0; transform: translate(-50%, 50%); cursor: nesw-resize; }
+.crop-handle.se { right: 0; bottom: 0; transform: translate(50%, 50%); cursor: nwse-resize; }
+.crop-handle.nw::before { left: calc(50% - 2px); top: calc(50% - 2px); border-left-width: 4px; border-top-width: 4px; }
+.crop-handle.ne::before { right: calc(50% - 2px); top: calc(50% - 2px); border-right-width: 4px; border-top-width: 4px; }
+.crop-handle.sw::before { left: calc(50% - 2px); bottom: calc(50% - 2px); border-left-width: 4px; border-bottom-width: 4px; }
+.crop-handle.se::before { right: calc(50% - 2px); bottom: calc(50% - 2px); border-right-width: 4px; border-bottom-width: 4px; }
+.photo-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; }
 @keyframes settle { from { transform: rotate(-4deg) scale(0.96); opacity: 0; } }
 
 .status { text-align: center; margin: 1.25rem 0; }
@@ -204,7 +249,39 @@ button.link {
 .sighting img { width: 4rem; height: 4rem; border-radius: 0.45rem; object-fit: cover; }
 .sighting h3 { font-size: 1.05rem; }
 .sighting p { margin: 0.15rem 0 0; font-size: 0.82rem; }
-.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft); padding: 0 0.3rem; }
+button.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft); padding: 0 0.3rem; align-self: start; }
+.sighting .place { color: var(--leaf); font-weight: 500; }
+.sighting-notes, .note-editor { grid-column: 1 / -1; }
+.sighting-notes { display: grid; gap: 0.3rem; justify-items: start; }
+.sighting .note {
+  margin: 0; font: italic 0.92rem/1.45 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere;
+  border-left: 2px solid var(--rule); padding-left: 0.6rem;
+}
+.sighting-notes .link { font-size: 0.8rem; }
+.note-editor { display: grid; gap: 0.5rem; }
+.note-editor label { display: grid; gap: 0.1rem; }
+.note-editor .eyebrow { margin: 0; }
+.note-editor input, .note-editor textarea {
+  width: 100%; padding: 0.45rem 0.6rem; border: 1.5px solid var(--rule); border-radius: 0.5rem;
+  background: var(--paper); color: var(--ink); font: 0.92rem/1.4 var(--sans); resize: vertical;
+}
+.note-editor input:focus, .note-editor textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.note-actions { display: flex; gap: 0.8rem; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.btn.small { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.backup { margin: 0 0 1.25rem; }
+.backup-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.backup-actions .eyebrow { margin: 0 0.4rem 0 0; }
+.import-confirm, .import-message {
+  margin-top: 0.75rem; padding: 0.8rem 1rem; border-radius: 0.7rem; background: var(--card); box-shadow: var(--shadow);
+}
+.import-confirm p, .import-message p { margin: 0 0 0.5rem; }
+.import-message p:last-child { margin: 0; }
+.import-message.ok { border-left: 4px solid var(--leaf); }
+.import-message.error { border-left: 4px solid var(--accent); }
+.import-message.error p { color: var(--accent); font-weight: 600; }
+.import-message ul { margin: 0; padding-left: 1.2rem; font-size: 0.88rem; }
+.card-actions { gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+.share-note { margin-right: auto; }
 
 /* species index */
 .species-index > .muted { max-width: 36rem; }
@@ -219,6 +296,31 @@ button.link {
 .kind ul { list-style: none; margin: 0; padding: 0; columns: 2 14rem; column-gap: 1.5rem; }
 .kind li { padding: 0.18rem 0; break-inside: avoid; }
 .kind li.seen { color: var(--leaf); font-weight: 600; }
+.kind li a { color: inherit; text-decoration: none; }
+.kind li a:hover { color: var(--accent); text-decoration: underline; }
+
+/* species page */
+.back { display: inline-block; margin-bottom: 1rem; font-size: 0.9rem; text-decoration: none; }
+.back:hover { text-decoration: underline; }
+.species-page h1 { margin-bottom: 0.2rem; }
+.sci { margin: 0 0 1.25rem; font: italic 1.05rem var(--serif); color: var(--ink-soft); }
+.plate {
+  margin: 0 0 1.5rem; padding: 0.6rem 0.6rem 0.5rem; max-width: 32rem;
+  background: var(--card); border-radius: 0.5rem; box-shadow: var(--shadow); transform: rotate(-0.6deg);
+}
+.plate img { display: block; width: 100%; height: auto; border-radius: 0.3rem; background: var(--paper-2); }
+.plate figcaption { margin-top: 0.45rem; font-size: 0.78rem; color: var(--ink-soft); }
+.your-sightings { margin: 0 0 1.5rem; }
+.your-sightings .sighting { grid-template-columns: 4rem 1fr; max-width: 22rem; }
+.your-sightings > p.muted { margin: 0; }
+.description { font: 1.08rem/1.65 var(--serif); max-width: 38rem; margin: 0 0 0.5rem; }
+.species-page .small { max-width: 38rem; margin: 0 0 1.5rem; }
+.outlinks { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.outlinks a {
+  display: inline-block; padding: 0.45rem 0.9rem; border: 1.5px solid var(--rule); border-radius: 999px;
+  background: var(--card); text-decoration: none; font-weight: 500;
+}
+.outlinks a:hover { border-color: var(--accent); }
 
 /* about */
 .prose h2 { font-size: 1.4rem; margin: 2rem 0 0.6rem; }
@@ -233,6 +335,10 @@ button.link {
 .reliability .trace { fill: none; stroke: var(--accent); stroke-width: 1.5; }
 .reliability circle { fill: var(--accent); fill-opacity: 0.75; }
 .reliability text { font: 11px var(--mono); fill: var(--ink-soft); }
+
+.credits summary { cursor: pointer; font-weight: 500; }
+.credits ul { font-size: 0.85rem; columns: 2 16rem; column-gap: 1.5rem; padding-left: 1.1rem; }
+.credits li { break-inside: avoid; }
 
 footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); font-size: 0.85rem; color: var(--ink-soft); }
 

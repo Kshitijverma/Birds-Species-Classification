@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
+import { initialCrop, toRegion, type Crop, type Region } from "../crop";
 import type { Verdict } from "../verdict";
+import { CropBox, CropShade, cropStyle } from "./CropBox";
 import { FieldCard } from "./FieldCard";
 
 const BASE = import.meta.env.BASE_URL;
@@ -8,6 +10,8 @@ interface Example {
   species: string;
   file: string;
 }
+
+const regionCrop = (r: Region): Crop => ({ x: r.x, y: r.y, size: r.width });
 
 const NOTES = [
   "Checking the bill shape…",
@@ -19,8 +23,8 @@ const NOTES = [
 
 type State =
   | { step: "idle" }
-  | { step: "working"; photo: Blob; url: string }
-  | { step: "done"; photo: Blob; url: string; verdict: Verdict }
+  | { step: "working"; photo: Blob; url: string; region?: Region }
+  | { step: "done"; photo: Blob; url: string; region?: Region; verdict: Verdict }
   | { step: "error"; url?: string; message: string };
 
 export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob) => Promise<void> }) {
@@ -28,6 +32,10 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
   const [dragging, setDragging] = useState(false);
   const [examples, setExamples] = useState<Example[]>([]);
   const input = useRef<HTMLInputElement>(null);
+  const img = useRef<HTMLImageElement>(null);
+  // The crop box, in photo pixels, while the visitor is placing it (null when not cropping).
+  const [crop, setCrop] = useState<Crop | null>(null);
+  const [natural, setNatural] = useState({ width: 0, height: 0 });
 
   const url = state.step === "idle" ? undefined : state.url;
   useEffect(() => () => {
@@ -38,13 +46,14 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
     fetch(`${BASE}examples/examples.json`).then((r) => r.json()).then(setExamples).catch(() => {});
   }, []);
 
-  async function run(photo: Blob, shownUrl = URL.createObjectURL(photo)) {
-    setState({ step: "working", photo, url: shownUrl });
+  async function run(photo: Blob, shownUrl = URL.createObjectURL(photo), region?: Region) {
+    setCrop(null);
+    setState({ step: "working", photo, url: shownUrl, region });
     try {
       // The model and runtime load on first use, so the page itself stays small.
       const { identify } = await import("../model");
-      const verdict = await identify(photo);
-      setState({ step: "done", photo, url: shownUrl, verdict });
+      const verdict = await identify(photo, region);
+      setState({ step: "done", photo, url: shownUrl, region, verdict });
     } catch (err) {
       setState({ step: "error", url: shownUrl, message: err instanceof Error ? err.message : String(err) });
     }
@@ -69,6 +78,22 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
   }, []);
 
   const busy = state.step === "working";
+  const region = state.step === "working" || state.step === "done" ? state.region : undefined;
+  const cropping = state.step === "done" && crop !== null;
+
+  function startCrop() {
+    const el = img.current;
+    if (!el?.naturalWidth || state.step !== "done") return;
+    const size = { width: el.naturalWidth, height: el.naturalHeight };
+    setNatural(size);
+    // Re-open the last crop if there is one, else start from a centred box.
+    setCrop(state.region ? regionCrop(state.region) : initialCrop(size.width, size.height));
+  }
+
+  function identifyCrop() {
+    if (state.step !== "done" || !crop) return;
+    run(state.photo, state.url, toRegion(crop, natural.width, natural.height));
+  }
 
   return (
     <section className="identify">
@@ -95,10 +120,30 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
         }}
       >
         {url ? (
-          <figure className={`snapshot ${busy ? "scanning" : ""}`}>
+          <figure className={`snapshot ${busy ? "scanning" : ""} ${cropping ? "cropping" : ""}`}>
             <span className="tape" aria-hidden />
-            <img src={url} alt="Your photo" />
+            <div className="frame">
+              <img ref={img} src={url} alt="Your photo" />
+              {cropping && crop ? (
+                <CropBox
+                  crop={crop}
+                  width={natural.width}
+                  height={natural.height}
+                  onChange={setCrop}
+                  onSubmit={identifyCrop}
+                  onCancel={() => setCrop(null)}
+                />
+              ) : region && natural.width > 0 && (
+                <div className="crop-layer static" aria-hidden>
+                  <CropShade crop={regionCrop(region)} width={natural.width} height={natural.height} />
+                  <div className="crop-box" style={cropStyle(regionCrop(region), natural.width, natural.height)} />
+                </div>
+              )}
+            </div>
             {busy && <span className="scanline" aria-hidden />}
+            {(cropping || region) && (
+              <figcaption>{cropping ? "Drag the box over the bird" : "Cropped to the bird"}</figcaption>
+            )}
           </figure>
         ) : (
           <div className="drop-empty">
@@ -110,9 +155,26 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
             <p>Drop a photo here, paste one, or</p>
           </div>
         )}
-        <button className="btn primary" onClick={() => input.current?.click()} disabled={busy}>
-          {url ? "Try another photo" : "Choose a photo"}
-        </button>
+        {cropping ? (
+          <div className="photo-actions">
+            <button className="btn primary" onClick={identifyCrop}>Identify this crop</button>
+            <button className="btn" onClick={() => setCrop(null)}>Cancel</button>
+          </div>
+        ) : (
+          <div className="photo-actions">
+            <button className="btn primary" onClick={() => input.current?.click()} disabled={busy}>
+              {url ? "Try another photo" : "Choose a photo"}
+            </button>
+            {state.step === "done" && (
+              <button className="btn" onClick={startCrop}>
+                {state.region ? "Adjust the crop" : "Crop to the bird"}
+              </button>
+            )}
+            {state.step === "done" && state.region && (
+              <button className="btn" onClick={() => run(state.photo, state.url)}>Use whole photo</button>
+            )}
+          </div>
+        )}
         <input
           ref={input}
           type="file"

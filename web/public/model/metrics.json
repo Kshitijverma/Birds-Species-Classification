@@ -1,0 +1,16 @@
+{
+  "model": "vit_small_patch14_dinov2.lvd142m frozen + linear head (int8 dynamic)",
+  "runtime": "onnxruntime-web (wasm)",
+  "species": 200,
+  "test_photos": 5794,
+  "threshold": 0.65,
+  "test_named_share": 0.8424,
+  "test_named_accuracy": 0.9269,
+  "val_named_share": 0.8367,
+  "val_named_accuracy": 0.9223,
+  "test_top1_accuracy": 0.8543,
+  "test_top3_accuracy": 0.9543,
+  "fp32_test_top1_accuracy": 0.8578,
+  "threshold_rule": "lowest threshold with val named accuracy >= 0.92",
+  "gate": "test named accuracy >= 0.9 and named share >= 0.5"
+}

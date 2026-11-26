@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { speciesHref } from "../species";
 import type { Match, Verdict } from "../verdict";
 
 const pct = (c: number) => (c >= 0.995 ? ">99%" : c < 0.01 ? "<1%" : `${Math.round(c * 100)}%`);
@@ -37,13 +38,8 @@ export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (
         <div>
           <p className="eyebrow">Identified as</p>
           <h2 className="species">{verdict.species}</h2>
-          <a
-            className="more"
-            href={`https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(verdict.species)}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Read about it ↗
+          <a className="more" href={speciesHref(verdict.species)}>
+            Read about it →
           </a>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { About } from "./components/About";
 import { Identify } from "./components/Identify";
 import { Notebook } from "./components/Notebook";
+import { OfflineStatus } from "./components/OfflineStatus";
 import { Species } from "./components/Species";
 import { thumbnail, useNotebook } from "./notebook";
 
@@ -61,6 +62,7 @@ export function App() {
       <footer>
         Runs in your browser · photos stay on your device ·{" "}
         <a href="https://github.com/Kshitijverma/Birds-Species-Classification">source</a>
+        <OfflineStatus />
       </footer>
     </div>
   );

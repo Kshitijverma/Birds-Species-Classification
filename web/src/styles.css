@@ -204,7 +204,39 @@ button.link {
 .sighting img { width: 4rem; height: 4rem; border-radius: 0.45rem; object-fit: cover; }
 .sighting h3 { font-size: 1.05rem; }
 .sighting p { margin: 0.15rem 0 0; font-size: 0.82rem; }
-.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft); padding: 0 0.3rem; }
+button.remove { font-size: 1.3rem; text-decoration: none; color: var(--ink-soft); padding: 0 0.3rem; align-self: start; }
+.sighting .place { color: var(--leaf); font-weight: 500; }
+.sighting-notes, .note-editor { grid-column: 1 / -1; }
+.sighting-notes { display: grid; gap: 0.3rem; justify-items: start; }
+.sighting .note {
+  margin: 0; font: italic 0.92rem/1.45 var(--serif); white-space: pre-wrap; overflow-wrap: anywhere;
+  border-left: 2px solid var(--rule); padding-left: 0.6rem;
+}
+.sighting-notes .link { font-size: 0.8rem; }
+.note-editor { display: grid; gap: 0.5rem; }
+.note-editor label { display: grid; gap: 0.1rem; }
+.note-editor .eyebrow { margin: 0; }
+.note-editor input, .note-editor textarea {
+  width: 100%; padding: 0.45rem 0.6rem; border: 1.5px solid var(--rule); border-radius: 0.5rem;
+  background: var(--paper); color: var(--ink); font: 0.92rem/1.4 var(--sans); resize: vertical;
+}
+.note-editor input:focus, .note-editor textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.note-actions { display: flex; gap: 0.8rem; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.btn.small { padding: 0.4rem 0.8rem; font-size: 0.85rem; }
+.backup { margin: 0 0 1.25rem; }
+.backup-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.backup-actions .eyebrow { margin: 0 0.4rem 0 0; }
+.import-confirm, .import-message {
+  margin-top: 0.75rem; padding: 0.8rem 1rem; border-radius: 0.7rem; background: var(--card); box-shadow: var(--shadow);
+}
+.import-confirm p, .import-message p { margin: 0 0 0.5rem; }
+.import-message p:last-child { margin: 0; }
+.import-message.ok { border-left: 4px solid var(--leaf); }
+.import-message.error { border-left: 4px solid var(--accent); }
+.import-message.error p { color: var(--accent); font-weight: 600; }
+.import-message ul { margin: 0; padding-left: 1.2rem; font-size: 0.88rem; }
+.card-actions { gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+.share-note { margin-right: auto; }
 
 /* species index */
 .species-index > .muted { max-width: 36rem; }

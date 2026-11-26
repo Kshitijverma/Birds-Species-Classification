@@ -131,7 +131,7 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
         <p className="status error" role="alert">Something went wrong: {state.message}</p>
       )}
       {state.step === "done" && (
-        <FieldCard verdict={state.verdict} onRecord={(s) => onRecord(s, state.photo)} />
+        <FieldCard verdict={state.verdict} onRecord={(s) => onRecord(s, state.photo)} photo={state.photo} />
       )}
 
       {examples.length > 0 && (

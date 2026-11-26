@@ -1,10 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { Match, Verdict } from "../verdict";
+import { ShareButton } from "./ShareButton";
 
 const pct = (c: number) => (c >= 0.995 ? ">99%" : c < 0.01 ? "<1%" : `${Math.round(c * 100)}%`);
 const barWidth = (c: number) => `${(c * 100).toFixed(1)}%`;
 
-export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (species: string) => Promise<void> }) {
+export function FieldCard({ verdict, onRecord, photo }: {
+  verdict: Verdict;
+  onRecord: (species: string) => Promise<void>;
+  photo?: Blob;
+}) {
   const [saved, setSaved] = useState<string | null>(null);
   const card = useRef<HTMLElement>(null);
   useEffect(() => card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), [verdict]);
@@ -54,6 +59,7 @@ export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (
         </>
       )}
       <div className="card-actions">
+        {photo && <ShareButton species={verdict.species} confidence={verdict.confidence} photo={photo} />}
         {saved === verdict.species ? (
           <span className="saved">✓ In your notebook</span>
         ) : (

@@ -20,7 +20,7 @@ function currentRoute(): Route {
 
 export function App() {
   const [route, setRoute] = useState<Route>(currentRoute);
-  const { entries, record, remove } = useNotebook();
+  const { entries, record, remove, annotate, replaceAll } = useNotebook();
   const seen = useMemo(() => new Set(entries.map((e) => e.species)), [entries]);
 
   useEffect(() => {
@@ -53,7 +53,9 @@ export function App() {
 
       <main>
         {route === "#/" && <Identify onRecord={async (s, photo) => record(s, await thumbnail(photo))} />}
-        {route === "#/notebook" && <Notebook entries={entries} onRemove={remove} />}
+        {route === "#/notebook" && (
+          <Notebook entries={entries} onRemove={remove} onAnnotate={annotate} onReplaceAll={replaceAll} />
+        )}
         {route === "#/species" && <Species seen={seen} />}
         {route === "#/about" && <About />}
       </main>

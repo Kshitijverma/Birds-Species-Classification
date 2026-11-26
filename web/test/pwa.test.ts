@@ -16,6 +16,7 @@ describe("service worker manifest", () => {
     write("index.html", "<html>");
     write("sw.js", "old worker");
     write("assets/index-abc.js", "js");
+    write("assets/model.worker-def.js", "worker");
     write("assets/ort-wasm-simd-threaded-xyz.wasm", "wasm");
     write("model/model.onnx", "weights v1");
     write("model/labels.json", "{}");
@@ -24,7 +25,8 @@ describe("service worker manifest", () => {
 
   it("precaches the shell and leaves the model and wasm for first use", () => {
     const m = swManifest(dist);
-    expect(m.shell).toEqual(["./assets/index-abc.js", "./", "./model/labels.json"]); // "./" is index.html
+    // "./" is index.html; the model worker's chunk is shell, so identifying offline can start it.
+    expect(m.shell).toEqual(["./assets/index-abc.js", "./assets/model.worker-def.js", "./", "./model/labels.json"]);
     expect(m.runtime.map((r) => r.url)).toEqual(["./assets/ort-wasm-simd-threaded-xyz.wasm", "./model/model.onnx"]);
     expect(m.runtime[1].sha256).toMatch(/^[0-9a-f]{64}$/);
   });

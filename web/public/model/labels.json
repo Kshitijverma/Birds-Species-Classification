@@ -201,5 +201,7 @@
     "Winter Wren",
     "Common Yellowthroat"
   ],
-  "threshold": 0.65
+  "threshold": 0.65,
+  "maxDistance": 1.0815,
+  "flip": true
 }

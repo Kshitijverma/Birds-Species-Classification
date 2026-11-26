@@ -1,6 +1,6 @@
 # Field Guide: Bird Classifier
 
-Show it a photo of a bird and it names the species, out of **200 North American species** from [CUB-200-2011](https://www.vision.caltech.edu/datasets/cub_200_2011/). If it isn't confident, it says **Can't be sure** and shows its closest matches instead of guessing.
+Show it a photo of a bird and it names the species, out of **200 North American species** from [CUB-200-2011](https://www.vision.caltech.edu/datasets/cub_200_2011/). If it isn't confident, it says **Can't be sure** and shows its closest matches instead of guessing. If the photo looks like none of the 200, it says **Not a bird I know**.
 
 **Live:** https://kshitijverma.github.io/Birds-Species-Classification/
 

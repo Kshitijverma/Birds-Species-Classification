@@ -14,6 +14,19 @@ export function FieldCard({ verdict, onRecord }: { verdict: Verdict; onRecord: (
     setSaved(species);
   }
 
+  if (verdict.kind === "not-a-bird") {
+    return (
+      <article className="card unsure" ref={card}>
+        <p className="eyebrow">Field note</p>
+        <h2 className="species">Not a bird I know</h2>
+        <p className="muted">
+          This photo doesn't look like any of the 200 species it knows. It may not be a bird, or the bird may be
+          too small or hidden to see. Try a closer photo with the bird filling more of the frame.
+        </p>
+      </article>
+    );
+  }
+
   if (verdict.kind === "cant-tell") {
     return (
       <article className="card unsure" ref={card}>

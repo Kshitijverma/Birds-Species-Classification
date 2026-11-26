@@ -5,3 +5,4 @@ onnxruntime>=1.19
 onnxscript
 pillow>=10
 timm>=1.0
+requests

@@ -1,0 +1,44 @@
+[
+  {
+    "species": "Northern Cardinal",
+    "file": "northern-cardinal.jpg",
+    "license": "CC0",
+    "attribution": "no rights reserved",
+    "url": "https://www.inaturalist.org/observations/416918492"
+  },
+  {
+    "species": "Blue Jay",
+    "file": "blue-jay.jpg",
+    "license": "CC0",
+    "attribution": "no rights reserved",
+    "url": "https://www.inaturalist.org/observations/414709353"
+  },
+  {
+    "species": "Painted Bunting",
+    "file": "painted-bunting.jpg",
+    "license": "CC0",
+    "attribution": "no rights reserved",
+    "url": "https://www.inaturalist.org/observations/2800791"
+  },
+  {
+    "species": "Belted Kingfisher",
+    "file": "belted-kingfisher.jpg",
+    "license": "CC0",
+    "attribution": "no rights reserved",
+    "url": "https://www.inaturalist.org/observations/412516275"
+  },
+  {
+    "species": "American Goldfinch",
+    "file": "american-goldfinch.jpg",
+    "license": "CC0",
+    "attribution": "no rights reserved",
+    "url": "https://www.inaturalist.org/observations/53187208"
+  },
+  {
+    "species": "Pileated Woodpecker",
+    "file": "pileated-woodpecker.jpg",
+    "license": "CC0",
+    "attribution": "no rights reserved",
+    "url": "https://www.inaturalist.org/observations/388551192"
+  }
+]

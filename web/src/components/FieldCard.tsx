@@ -13,7 +13,11 @@ export function FieldCard({ verdict, onRecord, photo }: {
 }) {
   const [saved, setSaved] = useState<string | null>(null);
   const card = useRef<HTMLElement>(null);
-  useEffect(() => card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), [verdict]);
+  // Braces matter: newer Chromium returns a Promise from scrollIntoView, and React would
+  // call it as the effect's cleanup on the next Verdict ("n is not a function").
+  useEffect(() => {
+    card.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [verdict]);
 
   async function save(species: string) {
     await onRecord(species);

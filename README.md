@@ -29,6 +29,7 @@ All numbers, and the Threshold, are in [`web/public/model/metrics.json`](web/pub
   - `npm run dev` starts it locally.
   - `npm test` runs the verdict rule tests and the preprocessing parity test.
   - `npm run build` builds it to `web/dist`.
+  - `web/pwa/` is the service worker that makes the site installable and offline: the site is cached on the first visit, the model on the first identification. Each build lists its files' content hashes in `sw.js`, so a retrained model replaces the cached one.
 - `training/` holds the reproducible training pipeline (Python; a 4-core CPU is enough).
 - `legacy/` is the original 2020 project: attribute-based classifiers, a Keras CNN, and the report.
 - `.github/workflows/ci.yml` lints, tests and builds on every PR, and deploys to GitHub Pages on every push to `master`.

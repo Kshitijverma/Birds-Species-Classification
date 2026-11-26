@@ -1,0 +1,25 @@
+/* Offline support notes (OfflineStatus.tsx). */
+.offline-note {
+  display: inline-flex; align-items: center; gap: 0.4rem; margin-left: 0.6rem;
+  font: 500 0.68rem/1.4 var(--mono); text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--ink-soft); white-space: nowrap; cursor: help;
+}
+.offline-note::before {
+  content: ""; width: 0.45rem; height: 0.45rem; border-radius: 50%;
+  border: 1.5px solid var(--ink-soft);
+}
+.offline-note.ready::before { background: var(--leaf); border-color: var(--leaf); }
+
+.update-slip {
+  position: fixed; left: 50%; bottom: 1.25rem; z-index: 10;
+  transform: translateX(-50%) rotate(-0.6deg);
+  padding: 0.6rem 1.1rem; border-radius: 0.4rem;
+  background: var(--card); box-shadow: var(--shadow); border: 1px solid var(--rule);
+  font: 500 0.85rem var(--sans); color: var(--ink); white-space: nowrap;
+  animation: slip-in 0.35s ease-out;
+}
+.update-slip::before {
+  content: ""; position: absolute; top: -0.55rem; left: 50%; width: 3.5rem; height: 1.1rem;
+  transform: translateX(-50%) rotate(3deg); background: var(--tape);
+}
+@keyframes slip-in { from { opacity: 0; transform: translate(-50%, 0.8rem) rotate(-0.6deg); } }

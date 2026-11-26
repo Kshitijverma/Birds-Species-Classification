@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { speciesHref } from "../species";
 import type { Match, Verdict } from "../verdict";
 import { ShareButton } from "./ShareButton";
 
@@ -42,13 +43,8 @@ export function FieldCard({ verdict, onRecord, photo }: {
         <div>
           <p className="eyebrow">Identified as</p>
           <h2 className="species">{verdict.species}</h2>
-          <a
-            className="more"
-            href={`https://en.wikipedia.org/wiki/Special:Search?search=${encodeURIComponent(verdict.species)}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Read about it ↗
+          <a className="more" href={speciesHref(verdict.species)}>
+            Read about it →
           </a>
         </div>
       </div>

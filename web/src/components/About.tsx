@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { speciesHref, type SpeciesInfo } from "../species";
+import { loadSpecies } from "./SpeciesPage";
 
 const BASE = import.meta.env.BASE_URL;
 
@@ -22,10 +24,12 @@ const pct = (x: number) => `${Math.round(x * 100)}%`;
 export function About() {
   const [m, setM] = useState<Metrics | null>(null);
   const [examples, setExamples] = useState<Example[]>([]);
+  const [species, setSpecies] = useState<SpeciesInfo[]>([]);
 
   useEffect(() => {
     fetch(`${BASE}model/metrics.json`).then((r) => r.json()).then(setM).catch(() => {});
     fetch(`${BASE}examples/examples.json`).then((r) => r.json()).then(setExamples).catch(() => {});
+    loadSpecies().then(setSpecies).catch(() => {});
   }, []);
 
   return (
@@ -80,6 +84,25 @@ export function About() {
           ))}
           .
         </p>
+      )}
+      <p>
+        Species descriptions are adapted from <a href="https://en.wikipedia.org/">Wikipedia</a> and are
+        available under <a href="https://creativecommons.org/licenses/by-sa/4.0/">CC BY-SA 4.0</a>; each
+        species page names and links its article. Species photos are by iNaturalist photographers under
+        CC0, CC BY or CC BY-SA, credited on each species page and listed below.
+      </p>
+      {species.length > 0 && (
+        <details className="credits">
+          <summary>Species photo credits ({species.length})</summary>
+          <ul>
+            {species.map((s) => (
+              <li key={s.slug}>
+                <a href={speciesHref(s.name)}>{s.name}</a>: <a href={s.photo.observation}>{s.photo.photographer}</a>,{" "}
+                <a href={s.photo.licenseUrl}>{s.photo.license}</a>
+              </li>
+            ))}
+          </ul>
+        </details>
       )}
       <p>
         This started in 2020 as a course project on bird attributes; the original notebooks and report are in

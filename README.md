@@ -4,7 +4,7 @@ Show it a photo of a bird and it names the species, out of **200 North American 
 
 **Live:** https://kshitijverma.github.io/Birds-Species-Classification/
 
-Everything runs in your browser: a DINOv2 ViT-S/14 model with a linear head, run through [ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/). Your photo is never uploaded. Species you identify can go into your own **field notebook** (a life list kept in your browser), and the species index shows how many of the 200 you've spotted.
+Everything runs in your browser: a DINOv2 ViT-S/14 model with a linear head, run through [ONNX Runtime Web](https://onnxruntime.ai/docs/tutorials/web/). Your photo is never uploaded. Species you identify can go into your own **field notebook** (a life list kept in your browser), and the species index shows how many of the 200 you've spotted. Each species has its own page (`#/species/<slug>`) with a photo, a short description, your sightings and links to Wikipedia and All About Birds.
 
 ## How good is it?
 
@@ -48,12 +48,14 @@ export CUB_DIR=/path/to/CUB_200_2011
 .venv/bin/python export.py      # ONNX + int8, metrics, parity fixture -> web/ (needs Node 24 and npm ci in web/)
 ```
 
-`export.py` scores the int8 model with onnxruntime-web (`web/scripts/score.ts`) and exits with an error unless, on the test set, named answers are at least 90% right and at least half of photos get one. `training/preprocess.py` and `web/src/preprocess.ts` must stay identical, and `web/test/parity.test.ts` checks this. `fetch_examples.py` re-downloads the site's CC0 example photos.
+`export.py` scores the int8 model with onnxruntime-web (`web/scripts/score.ts`) and exits with an error unless, on the test set, named answers are at least 90% right and at least half of photos get one. `training/preprocess.py` and `web/src/preprocess.ts` must stay identical, and `web/test/parity.test.ts` checks this. `fetch_examples.py` re-downloads the site's CC0 example photos, and `fetch_species.py` rebuilds the species pages' data (Wikipedia summaries and iNaturalist photos, into `web/public/species/`); photos it picks badly are replaced by pinning an observation id in `PHOTO_PINS`.
 
 ## Credits
 
 - **Training data:** CUB-200-2011. C. Wah, S. Branson, P. Welinder, P. Perona and S. Belongie, *The Caltech-UCSD Birds-200-2011 Dataset*, Caltech, 2011. Its photos are not included in this repo or on the site.
 - **Example photos:** CC0, from iNaturalist observations. Each one is listed in [`web/public/examples/examples.json`](web/public/examples/examples.json).
+- **Species descriptions:** adapted from the [Wikipedia](https://en.wikipedia.org/) article for each species, available under [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/). Each species page names and links its article.
+- **Species photos:** one iNaturalist photo per species, each under CC0, CC BY 4.0 or CC BY-SA 4.0. The photographer, licence and observation link for every photo are in [`web/public/species/species.json`](web/public/species/species.json), on each species page and on the site's About page.
 - **Model:** [DINOv2](https://github.com/facebookresearch/dinov2) (Meta AI, Apache-2.0), via [timm](https://github.com/huggingface/pytorch-image-models).
 
 This started in 2020 as a course project on classifying birds from their attributes. It was rebuilt in 2026 as an in-browser classifier.

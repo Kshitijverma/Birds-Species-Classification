@@ -4,6 +4,7 @@ import { Identify } from "./components/Identify";
 import { Notebook } from "./components/Notebook";
 import { OfflineStatus } from "./components/OfflineStatus";
 import { Species } from "./components/Species";
+import { SpeciesPage } from "./components/SpeciesPage";
 import { thumbnail, useNotebook } from "./notebook";
 
 // Hash routes, so the site works on GitHub Pages without server rewrites.
@@ -15,18 +16,26 @@ const ROUTES = {
 } as const;
 type Route = keyof typeof ROUTES;
 
+// A species page, "#/species/<slug>", sits under the Species tab.
+const SPECIES_PAGE = /^#\/species\/([a-z0-9-]+)$/;
+
 function currentRoute(): Route {
+  if (SPECIES_PAGE.test(location.hash)) return "#/species";
   return (location.hash in ROUTES ? location.hash : "#/") as Route;
 }
 
+const currentSlug = () => SPECIES_PAGE.exec(location.hash)?.[1] ?? null;
+
 export function App() {
   const [route, setRoute] = useState<Route>(currentRoute);
+  const [slug, setSlug] = useState<string | null>(currentSlug);
   const { entries, record, remove, annotate, replaceAll } = useNotebook();
   const seen = useMemo(() => new Set(entries.map((e) => e.species)), [entries]);
 
   useEffect(() => {
     const onHash = () => {
       setRoute(currentRoute());
+      setSlug(currentSlug());
       window.scrollTo(0, 0);
     };
     window.addEventListener("hashchange", onHash);
@@ -57,7 +66,7 @@ export function App() {
         {route === "#/notebook" && (
           <Notebook entries={entries} onRemove={remove} onAnnotate={annotate} onReplaceAll={replaceAll} />
         )}
-        {route === "#/species" && <Species seen={seen} />}
+        {route === "#/species" && (slug ? <SpeciesPage slug={slug} entries={entries} /> : <Species seen={seen} />)}
         {route === "#/about" && <About />}
       </main>
 

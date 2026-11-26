@@ -12,4 +12,9 @@ export default tseslint.config(
     plugins: { "react-hooks": reactHooks },
     rules: { ...reactHooks.configs.recommended.rules },
   },
+  {
+    extends: [js.configs.recommended],
+    files: ["pwa/sw.js"],
+    languageOptions: { globals: globals.serviceworker },
+  },
 );

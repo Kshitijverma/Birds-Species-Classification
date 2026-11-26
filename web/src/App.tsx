@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { About } from "./components/About";
 import { Identify } from "./components/Identify";
 import { Notebook } from "./components/Notebook";
+import { OfflineStatus } from "./components/OfflineStatus";
 import { Species } from "./components/Species";
 import { SpeciesPage } from "./components/SpeciesPage";
 import { thumbnail, useNotebook } from "./notebook";
@@ -28,7 +29,7 @@ const currentSlug = () => SPECIES_PAGE.exec(location.hash)?.[1] ?? null;
 export function App() {
   const [route, setRoute] = useState<Route>(currentRoute);
   const [slug, setSlug] = useState<string | null>(currentSlug);
-  const { entries, record, remove } = useNotebook();
+  const { entries, record, remove, annotate, replaceAll } = useNotebook();
   const seen = useMemo(() => new Set(entries.map((e) => e.species)), [entries]);
 
   useEffect(() => {
@@ -62,7 +63,9 @@ export function App() {
 
       <main>
         {route === "#/" && <Identify onRecord={async (s, photo) => record(s, await thumbnail(photo))} />}
-        {route === "#/notebook" && <Notebook entries={entries} onRemove={remove} />}
+        {route === "#/notebook" && (
+          <Notebook entries={entries} onRemove={remove} onAnnotate={annotate} onReplaceAll={replaceAll} />
+        )}
         {route === "#/species" && (slug ? <SpeciesPage slug={slug} entries={entries} /> : <Species seen={seen} />)}
         {route === "#/about" && <About />}
       </main>
@@ -70,6 +73,7 @@ export function App() {
       <footer>
         Runs in your browser · photos stay on your device ·{" "}
         <a href="https://github.com/Kshitijverma/Birds-Species-Classification">source</a>
+        <OfflineStatus />
       </footer>
     </div>
   );

@@ -32,10 +32,11 @@ All numbers, the Threshold and the max distance are in [`web/public/model/metric
   - `npm run dev` starts it locally.
   - `npm test` runs the verdict rule tests and the preprocessing parity test.
   - `npm run build` builds it to `web/dist`.
+  - `npm run e2e` (after a build) serves `web/dist` under `/Birds-Species-Classification/` and runs the Playwright tests in `web/e2e/`: a smoke test (two example photos, a noise image, the notebook, every page, no console errors) and an axe accessibility check of each page in light and dark. It needs Chromium once: `npx playwright install --only-shell chromium`.
   - `web/pwa/` is the service worker that makes the site installable and offline: the site is cached on the first visit, the model on the first identification. Each build lists its files' content hashes in `sw.js`, so a retrained model replaces the cached one.
 - `training/` holds the reproducible training pipeline (Python; a 4-core CPU is enough).
 - `legacy/` is the original 2020 project: attribute-based classifiers, a Keras CNN, and the report.
-- `.github/workflows/ci.yml` lints, tests and builds on every PR, and deploys to GitHub Pages on every push to `master`.
+- `.github/workflows/ci.yml` lints, tests and builds on every PR, runs the end-to-end and accessibility tests, and deploys to GitHub Pages on every push to `master` once both pass.
 
 Domain terms (Species, Verdict, Threshold, Notebook…) are defined in [`CONTEXT.md`](CONTEXT.md).
 

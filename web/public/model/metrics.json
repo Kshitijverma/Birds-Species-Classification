@@ -3,141 +3,131 @@
   "runtime": "onnxruntime-web (wasm)",
   "species": 200,
   "test_photos": 5794,
-  "threshold": 0.65,
-  "max_distance": 1.0815,
-  "flip": true,
-  "temperature": 1.142,
-  "test_named_share": 0.8041,
-  "test_named_accuracy": 0.9403,
-  "test_not_a_bird_share": 0.006,
-  "val_named_share": 0.8117,
-  "val_named_accuracy": 0.9281,
-  "test_top1_accuracy": 0.8547,
-  "test_top3_accuracy": 0.9543,
-  "fp32_test_top1_accuracy": 0.8578,
-  "test_ece_before_temperature": 0.0229,
-  "test_ece": 0.0218,
-  "test_ece_shipped": 0.0256,
+  "threshold": 0.6,
+  "max_distance": 1.0911,
+  "flip": false,
+  "temperature": 1.0013,
+  "test_named_share": 0.855,
+  "test_named_accuracy": 0.9308,
+  "test_not_a_bird_share": 0.0057,
+  "val_named_share": 0.8617,
+  "val_named_accuracy": 0.9284,
+  "test_top1_accuracy": 0.8681,
+  "test_top3_accuracy": 0.9596,
+  "fp32_test_top1_accuracy": 0.8728,
+  "test_ece_before_temperature": 0.02,
+  "test_ece": 0.0198,
+  "test_ece_shipped": 0.0198,
   "reliability": [
     {
       "from": 0.067,
       "to": 0.133,
-      "photos": 4,
-      "confidence": 0.1196,
-      "accuracy": 0.0
+      "photos": 3,
+      "confidence": 0.1153,
+      "accuracy": 0.3333
     },
     {
       "from": 0.133,
       "to": 0.2,
-      "photos": 19,
-      "confidence": 0.17,
-      "accuracy": 0.1053
+      "photos": 20,
+      "confidence": 0.1745,
+      "accuracy": 0.2
     },
     {
       "from": 0.2,
       "to": 0.267,
-      "photos": 67,
-      "confidence": 0.2389,
-      "accuracy": 0.3881
+      "photos": 51,
+      "confidence": 0.2366,
+      "accuracy": 0.4314
     },
     {
       "from": 0.267,
       "to": 0.333,
-      "photos": 107,
-      "confidence": 0.3018,
-      "accuracy": 0.3832
+      "photos": 90,
+      "confidence": 0.3009,
+      "accuracy": 0.3889
     },
     {
       "from": 0.333,
       "to": 0.4,
-      "photos": 136,
-      "confidence": 0.3659,
-      "accuracy": 0.4044
+      "photos": 112,
+      "confidence": 0.3688,
+      "accuracy": 0.4554
     },
     {
       "from": 0.4,
       "to": 0.467,
-      "photos": 178,
-      "confidence": 0.4345,
-      "accuracy": 0.4213
+      "photos": 182,
+      "confidence": 0.4333,
+      "accuracy": 0.4341
     },
     {
       "from": 0.467,
       "to": 0.533,
-      "photos": 227,
-      "confidence": 0.5011,
-      "accuracy": 0.5066
+      "photos": 186,
+      "confidence": 0.5019,
+      "accuracy": 0.543
     },
     {
       "from": 0.533,
       "to": 0.6,
-      "photos": 227,
-      "confidence": 0.5659,
-      "accuracy": 0.6608
+      "photos": 179,
+      "confidence": 0.5675,
+      "accuracy": 0.6257
     },
     {
       "from": 0.6,
       "to": 0.667,
-      "photos": 209,
-      "confidence": 0.6351,
-      "accuracy": 0.622
+      "photos": 225,
+      "confidence": 0.6342,
+      "accuracy": 0.6889
     },
     {
       "from": 0.667,
       "to": 0.733,
-      "photos": 269,
-      "confidence": 0.7007,
-      "accuracy": 0.8178
+      "photos": 227,
+      "confidence": 0.6983,
+      "accuracy": 0.7093
     },
     {
       "from": 0.733,
       "to": 0.8,
-      "photos": 274,
-      "confidence": 0.7675,
-      "accuracy": 0.8285
+      "photos": 265,
+      "confidence": 0.7701,
+      "accuracy": 0.8377
     },
     {
       "from": 0.8,
       "to": 0.867,
-      "photos": 404,
-      "confidence": 0.8351,
-      "accuracy": 0.8812
+      "photos": 368,
+      "confidence": 0.8361,
+      "accuracy": 0.8614
     },
     {
       "from": 0.867,
       "to": 0.933,
-      "photos": 628,
-      "confidence": 0.9039,
-      "accuracy": 0.9268
+      "photos": 657,
+      "confidence": 0.9045,
+      "accuracy": 0.93
     },
     {
       "from": 0.933,
       "to": 1.0,
-      "photos": 3045,
-      "confidence": 0.9808,
-      "accuracy": 0.9764
+      "photos": 3229,
+      "confidence": 0.9811,
+      "accuracy": 0.9783
     }
   ],
   "flip_comparison": {
     "false": {
-      "val_named_share": 0.8,
-      "val_named_accuracy": 0.9333,
-      "threshold": 0.65,
-      "test_named_share": 0.8067,
-      "test_named_accuracy": 0.9371,
-      "test_top1_accuracy": 0.8543,
+      "val_named_share": 0.8617,
+      "val_named_accuracy": 0.9284,
+      "threshold": 0.6,
+      "test_named_share": 0.855,
+      "test_named_accuracy": 0.9308,
+      "test_top1_accuracy": 0.8681,
       "ood_not_a_bird": 37,
-      "node_ms_per_identification": 943.8
-    },
-    "true": {
-      "val_named_share": 0.8117,
-      "val_named_accuracy": 0.9281,
-      "threshold": 0.65,
-      "test_named_share": 0.8041,
-      "test_named_accuracy": 0.9403,
-      "test_top1_accuracy": 0.8547,
-      "ood_not_a_bird": 37,
-      "node_ms_per_identification": 1881.8
+      "node_ms_per_identification": 2334.9
     }
   },
   "ood_pictures": 39,
@@ -146,6 +136,6 @@
   "ood_named": 0,
   "threshold_rule": "lowest threshold with val named accuracy >= 0.92",
   "max_distance_rule": "99% quantile of val photos' distance to the nearest species",
-  "flip_rule": "on if it names more val photos, and kept only if it improves test named accuracy or share",
+  "flip_rule": "off (--no-flip): twice the time per photo, see docs/adr/0002",
   "gate": "test named accuracy >= 0.9 and named share >= 0.5"
 }

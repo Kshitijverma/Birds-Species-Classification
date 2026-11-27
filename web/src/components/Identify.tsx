@@ -13,6 +13,13 @@ interface Example {
 
 const regionCrop = (r: Region): Crop => ({ x: r.x, y: r.y, size: r.width });
 
+/** The Verdict in one sentence, for screen readers. */
+function announce(v: Verdict): string {
+  if (v.kind === "not-a-bird") return "Not a bird I know.";
+  if (v.kind === "cant-tell") return `Can't be sure. Closest match: ${v.closest[0]?.species ?? "none"}.`;
+  return `Identified as ${v.species}, ${Math.round(v.confidence * 100)}% confident.`;
+}
+
 const NOTES = [
   "Checking the bill shape…",
   "Looking for wing bars…",
@@ -107,6 +114,8 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
 
       <div
         className={`drop ${dragging ? "dragging" : ""} ${url ? "has-photo" : ""}`}
+        role="region"
+        aria-label="Photo to identify"
         onDragOver={(e) => {
           e.preventDefault();
           setDragging(true);
@@ -179,6 +188,7 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
           ref={input}
           type="file"
           accept="image/*"
+          aria-label="Choose a photo to identify"
           hidden
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -188,6 +198,10 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
         />
       </div>
 
+      {/* Always in the page, so screen readers announce each change to it. */}
+      <p className="sr-only" role="status">
+        {busy ? "Identifying the photo…" : state.step === "done" ? announce(state.verdict) : ""}
+      </p>
       {busy && <Working />}
       {state.step === "error" && (
         <p className="status error" role="alert">Something went wrong: {state.message}</p>
@@ -202,8 +216,13 @@ export function Identify({ onRecord }: { onRecord: (species: string, photo: Blob
           <ul>
             {examples.map((ex) => (
               <li key={ex.file}>
-                <button onClick={() => runExample(ex)} disabled={busy} title={ex.species}>
-                  <img src={`${BASE}examples/${ex.file}`} alt={ex.species} loading="lazy" />
+                <button
+                  onClick={() => runExample(ex)}
+                  disabled={busy}
+                  title={ex.species}
+                  aria-label={`Try the example photo: ${ex.species}`}
+                >
+                  <img src={`${BASE}examples/${ex.file}`} alt="" loading="lazy" />
                 </button>
               </li>
             ))}
@@ -220,9 +239,10 @@ function Working() {
     const t = setInterval(() => setI((n) => (n + 1) % NOTES.length), 1400);
     return () => clearInterval(t);
   }, []);
+  // The changing notes are decoration: the status line in Identify announces the work once.
   return (
-    <p className="status working" aria-live="polite">
-      <span className="pencil" aria-hidden>✎</span> {NOTES[i]}
+    <p className="status working">
+      <span className="pencil" aria-hidden>✎</span> <span aria-hidden>{NOTES[i]}</span>
       <span className="sub">The first photo also downloads the model (about 25 MB), once.</span>
     </p>
   );

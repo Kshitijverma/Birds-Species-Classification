@@ -1,69 +1,46 @@
-import * as ort from "onnxruntime-web/wasm";
+// The page's side of the model: identify() hands the photo to src/model.worker.ts, which loads
+// ONNX Runtime and the model on first use and does all the pixel work and inference, so the
+// page stays responsive while a photo is scored.
 import type { Region } from "./crop";
-import { INPUT_SIZE, preprocess } from "./preprocess";
-import { averageBatch, verdict, type Rules, type Verdict } from "./verdict";
+import type { Verdict } from "./verdict";
+import type { IdentifyRequest, IdentifyResponse } from "./model.worker";
 
-/** Longest side photos are scaled to before preprocessing, roughly the size of the training photos. */
-const MAX_SIDE = 512;
-const BASE = import.meta.env.BASE_URL;
+const pending = new Map<number, { resolve: (v: Verdict) => void; reject: (e: Error) => void }>();
+let nextId = 0;
+let worker: Worker | null = null;
 
-/** web/public/model/labels.json: the Species, the rules for a Verdict, and whether to also score the mirror image. */
-interface Labels extends Rules {
-  flip: boolean;
-}
-
-let loading: Promise<{ session: ort.InferenceSession; labels: Labels }> | null = null;
-
-/** Load the model once, on first use. */
-export function load() {
-  loading ??= (async () => {
-    const [session, labels] = await Promise.all([
-      ort.InferenceSession.create(`${BASE}model/model.onnx`, { executionProviders: ["wasm"] }),
-      fetch(`${BASE}model/labels.json`).then((r) => r.json() as Promise<Labels>),
-    ]);
-    return { session, labels };
-  })();
-  loading.catch(() => (loading = null)); // let a later attempt retry
-  return loading;
-}
-
-/**
- * Draw the photo (or just `region` of it, in photo pixels) at most MAX_SIDE px
- * on its longest side and read back RGBA pixels.
- */
-async function readPixels(photo: Blob, region?: Region) {
-  const bitmap = await createImageBitmap(photo);
-  const { x, y, width: w, height: h } = region ?? { x: 0, y: 0, width: bitmap.width, height: bitmap.height };
-  const scale = Math.min(1, MAX_SIDE / Math.max(w, h));
-  const width = Math.max(1, Math.round(w * scale));
-  const height = Math.max(1, Math.round(h * scale));
-  const canvas = new OffscreenCanvas(width, height);
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas 2D is not available in this browser.");
-  ctx.drawImage(bitmap, x, y, w, h, 0, 0, width, height);
-  bitmap.close();
-  return ctx.getImageData(0, 0, width, height);
-}
-
-/** The photo's tensor followed by its mirror image (each row reversed), as one batch of 2. */
-function withMirror(x: Float32Array): Float32Array {
-  const n = INPUT_SIZE;
-  const out = new Float32Array(2 * x.length);
-  out.set(x);
-  for (let row = 0; row < x.length / n; row++) {
-    for (let col = 0; col < n; col++) out[x.length + row * n + col] = x[row * n + n - 1 - col];
-  }
-  return out;
+/** Start the worker on first use; if it ever fails, fail what it had and start a fresh one next time. */
+function getWorker() {
+  if (worker) return worker;
+  const w = new Worker(new URL("./model.worker.ts", import.meta.url), { type: "module", name: "model" });
+  w.addEventListener("message", (e: MessageEvent<IdentifyResponse>) => {
+    const call = pending.get(e.data.id);
+    if (!call) return;
+    pending.delete(e.data.id);
+    if ("error" in e.data) call.reject(new Error(e.data.error));
+    else call.resolve(e.data.verdict);
+  });
+  const fail = (message: string) => {
+    w.terminate();
+    if (worker === w) worker = null;
+    for (const call of pending.values()) call.reject(new Error(message));
+    pending.clear();
+  };
+  w.addEventListener("error", (e) => {
+    e.preventDefault();
+    fail(e.message || "The model couldn't start in this browser.");
+  });
+  w.addEventListener("messageerror", () => fail("The model couldn't read that photo."));
+  worker = w;
+  return w;
 }
 
 /** Identify the bird in the photo, or only in `region` of it (in photo pixels) when the visitor cropped. */
-export async function identify(photo: Blob, region?: Region): Promise<Verdict> {
-  const [{ session, labels }, pixels] = await Promise.all([load(), readPixels(photo, region)]);
-  const x = preprocess(pixels);
-  // With flip on, the photo and its mirror image run as one batch and their outputs are averaged.
-  const batch = labels.flip ? 2 : 1;
-  const input = new ort.Tensor("float32", labels.flip ? withMirror(x) : x, [batch, 3, INPUT_SIZE, INPUT_SIZE]);
-  const out = await session.run({ input });
-  const output = averageBatch({ probs: out.probs.data as Float32Array, distance: out.distance.data as Float32Array });
-  return verdict(output, labels);
+export function identify(photo: Blob, region?: Region): Promise<Verdict> {
+  return new Promise((resolve, reject) => {
+    const id = nextId++;
+    const root = new URL(import.meta.env.BASE_URL, document.baseURI).href;
+    pending.set(id, { resolve, reject });
+    getWorker().postMessage({ id, root, photo, region } satisfies IdentifyRequest);
+  });
 }

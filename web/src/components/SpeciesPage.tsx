@@ -68,8 +68,8 @@ export function SpeciesPage({ slug, entries }: { slug: string; entries: Sighting
         </figcaption>
       </figure>
 
-      <section className="your-sightings" aria-label="Your sightings">
-        <p className="eyebrow">In your notebook</p>
+      <section className="your-sightings" aria-labelledby="your-sightings">
+        <h2 className="eyebrow" id="your-sightings">In your notebook</h2>
         {sighting ? (
           <div className="sighting">
             <img src={sighting.thumb} alt="" />
@@ -94,7 +94,7 @@ export function SpeciesPage({ slug, entries }: { slug: string; entries: Sighting
         text under <a href={wikipedia.licenseUrl}>{wikipedia.license}</a>.
       </p>
 
-      <p className="eyebrow">Read more</p>
+      <h2 className="eyebrow">Read more</h2>
       <ul className="outlinks">
         <li><a href={wikipedia.url} target="_blank" rel="noreferrer">Wikipedia ↗</a></li>
         {s.allAboutBirds && (

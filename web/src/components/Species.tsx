@@ -28,6 +28,7 @@ export function Species({ seen }: { seen: Set<string> }) {
       <input
         className="search"
         type="search"
+        aria-label="Search species"
         placeholder="Search species…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
@@ -39,8 +40,9 @@ export function Species({ seen }: { seen: Set<string> }) {
             {members.map((n) => (
               <li key={n} className={seen.has(n) ? "seen" : ""}>
                 <a href={speciesHref(n)}>
-                  {seen.has(n) && <span aria-label="spotted">✓ </span>}
+                  {seen.has(n) && <span aria-hidden>✓ </span>}
                   {n}
+                  {seen.has(n) && <span className="sr-only"> (spotted)</span>}
                 </a>
               </li>
             ))}

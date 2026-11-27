@@ -1,6 +1,6 @@
 """Export the trained model for the browser and check the ship gate.
 
-- ONNX (opset 17): "input" [N,3,224,224] -> "probs" [N,200] (softmax and the
+- ONNX (opset 17): "input" [N,3,336,336] -> "probs" [N,200] (softmax and the
   val-fitted temperature built in) and "distance" [N] (to the nearest species
   centroid, see model.SpeciesDistance).
 - int8 dynamic quantisation of MatMul/Gemm weights only (the patch-embedding
@@ -67,7 +67,7 @@ GATE_NAMED_SHARE = 0.50
 MAX_INT8_DROP = 0.01
 ECE_BINS = 15
 WEB_WORKERS = 4
-BLOCK = 1000
+BLOCK = round(1000 * (224 / SIZE) ** 2)  # photos per scoring round: ~600 MB of float32 inputs
 
 
 @dataclass
@@ -83,9 +83,21 @@ class Settings:
     threshold: float
 
 
-def stack(items: list[cub.Photo]) -> tuple[np.ndarray, np.ndarray]:
-    return (np.stack([load_eval(p.path).numpy() for p in items]),
-            np.array([p.species for p in items]))
+class Photos:
+    """Preprocessed photos, loaded a slice at a time (all of test at 448 px would be 14 GB)."""
+
+    def __init__(self, paths: list[Path]):
+        self.paths = paths
+
+    def __len__(self) -> int:
+        return len(self.paths)
+
+    def __getitem__(self, s: slice) -> np.ndarray:
+        return np.stack([load_eval(p).numpy() for p in self.paths[s]])
+
+
+def stack(items: list[cub.Photo]) -> tuple[Photos, np.ndarray]:
+    return Photos([p.path for p in items]), np.array([p.species for p in items])
 
 
 def native_probs(model: Path, inputs: np.ndarray) -> np.ndarray:
@@ -106,7 +118,7 @@ def web_outputs(model: Path, inputs: np.ndarray, name: str, flip: bool = False,
     With flip, each photo runs in one batch with its mirror image and the two
     are averaged, as web/src/model.ts does. Runs `workers` processes in
     parallel over blocks of BLOCK photos, deleting each block's input file
-    afterwards (every photo is 600 KB as float32).
+    afterwards.
     """
     probs, distance, ms = [], [], []
     for start in range(0, len(inputs), BLOCK):
@@ -224,7 +236,10 @@ def export_onnx(model: nn.Module) -> tuple[Path, Path]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--cub")
+    parser.add_argument("--no-flip", action="store_true",
+                        help="never average with the mirror image (it doubles the time per photo; see docs/adr/0002)")
     args = parser.parse_args()
+    flips = (False,) if args.no_flip else (False, True)
     root = cub.cub_dir(args.cub)
     torch.set_num_threads(4)
 
@@ -247,22 +262,25 @@ def main() -> int:
 
     # Choose every setting on val, for each flip option, before scoring test.
     print("scoring val with onnxruntime-web...", flush=True)
-    val = {flip: web_outputs(int8, val_x, f"val{int(flip)}", flip)[0] for flip in (False, True)}
-    options = {flip: pick_settings(val[flip], val_y, flip) for flip in (False, True)}
+    val = {flip: web_outputs(int8, val_x, f"val{int(flip)}", flip)[0] for flip in flips}
+    options = {flip: pick_settings(val[flip], val_y, flip) for flip in flips}
     val_named = {flip: named_stats(val[flip], val_y, s.max_distance, s.threshold) for flip, s in options.items()}
     for flip, (share, acc) in val_named.items():
         print(f"val, flip {flip}: {options[flip]}, named share {share:.4f}, named accuracy {acc:.4f}", flush=True)
-    val_pick = val_named[True][0] > val_named[False][0]
+    val_pick = True in flips and val_named[True][0] > val_named[False][0]
 
     print("scoring test with onnxruntime-web...", flush=True)
-    test = {flip: web_outputs(int8, test_x, f"test{int(flip)}", flip)[0] for flip in (False, True)}
+    # Flip doubles the cost of scoring, so test it only if val chose it.
+    test = {flip: web_outputs(int8, test_x, f"test{int(flip)}", flip)[0] for flip in (False, True)
+            if not flip or val_pick}
     int8_acc = accuracy(test[False].probs, test_y)
     print(f"int8 (web)    test top-1 {int8_acc:.3f}  size {int8.stat().st_size / 1e6:.1f} MB", flush=True)
     if fp32_acc - int8_acc > MAX_INT8_DROP:
         print("EXPORT FAILED: int8 loses more than 1 point; fp32 is too big to ship.", file=sys.stderr)
         return 1
 
-    test_named = {flip: named_stats(test[flip], test_y, s.max_distance, s.threshold) for flip, s in options.items()}
+    test_named = {flip: named_stats(out, test_y, options[flip].max_distance, options[flip].threshold)
+                  for flip, out in test.items()}
     for flip, (share, acc) in test_named.items():
         print(f"test, flip {flip}: named share {share:.4f}, named accuracy {acc:.4f}", flush=True)
     # Flip costs a second run per photo: ship it only if val chose it and test confirms it helps.
@@ -277,13 +295,13 @@ def main() -> int:
     top3 = float(np.mean([y in np.argsort(-p)[:3] for p, y in zip(test_out.probs, test_y)]))
     test_kinds = verdict_kind(test_out, s)
 
-    ood_out = {f: web_outputs(int8, ood_x, f"ood{int(f)}", f)[0] for f in (False, True)}
+    ood_out = {f: web_outputs(int8, ood_x, f"ood{int(f)}", f)[0] for f in flips}
     ood_kinds = verdict_kind(ood_out[flip], s)
     print("out-of-distribution pictures:")
     for name, kind, p, d in zip(ood_names, ood_kinds, ood_out[flip].probs, ood_out[flip].distance):
         print(f"  {name:28s} {kind:10s} distance {d:.3f}  top {p.max():.2f}")
 
-    ms = {f: web_outputs(int8, val_x[:12], f"time{int(f)}", f, workers=1)[1][2:] for f in (False, True)}
+    ms = {f: web_outputs(int8, val_x[:12], f"time{int(f)}", f, workers=1)[1][2:] for f in flips}
     metrics = {
         "model": f"{ARCH} frozen + linear head (int8 dynamic)",
         "runtime": "onnxruntime-web (wasm)",
@@ -309,19 +327,20 @@ def main() -> int:
             str(f).lower(): {"val_named_share": round(val_named[f][0], 4),
                              "val_named_accuracy": round(val_named[f][1], 4),
                              "threshold": options[f].threshold,
-                             "test_named_share": round(test_named[f][0], 4),
-                             "test_named_accuracy": round(test_named[f][1], 4),
-                             "test_top1_accuracy": round(accuracy(test[f].probs, test_y), 4),
+                             **({"test_named_share": round(test_named[f][0], 4),
+                                 "test_named_accuracy": round(test_named[f][1], 4),
+                                 "test_top1_accuracy": round(accuracy(test[f].probs, test_y), 4)} if f in test else {}),
                              "ood_not_a_bird": verdict_kind(ood_out[f], options[f]).count("not-a-bird"),
                              "node_ms_per_identification": round(float(np.median(ms[f])), 1)}
-            for f in (False, True)},
+            for f in flips},
         "ood_pictures": len(ood_kinds),
         "ood_not_a_bird": ood_kinds.count("not-a-bird"),
         "ood_cant_tell": ood_kinds.count("cant-tell"),
         "ood_named": ood_kinds.count("species"),
         "threshold_rule": f"lowest threshold with val named accuracy >= {VAL_NAMED_TARGET}",
         "max_distance_rule": f"{KNOWN_QUANTILE:.0%} quantile of val photos' distance to the nearest species",
-        "flip_rule": "on if it names more val photos, and kept only if it improves test named accuracy or share",
+        "flip_rule": ("off (--no-flip): twice the time per photo, see docs/adr/0002" if args.no_flip else
+                      "on if it names more val photos, and kept only if it improves test named accuracy or share"),
         "gate": f"test named accuracy >= {GATE_NAMED_ACCURACY} and named share >= {GATE_NAMED_SHARE}",
     }
     print(json.dumps({k: v for k, v in metrics.items() if k != "reliability"}, indent=2))

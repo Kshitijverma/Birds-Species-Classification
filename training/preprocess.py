@@ -1,7 +1,7 @@
 """Evaluation preprocessing, mirrored exactly by web/src/preprocess.ts.
 
 Plain bilinear resize (align_corners=False, no antialiasing) so the shorter
-side is 256 px, keeping the aspect ratio; centre crop 224x224; ImageNet
+side is 384 px, keeping the aspect ratio; centre crop 336x336; ImageNet
 mean/std normalisation; CHW float32. Keep both files in step:
 web/test/parity.test.ts fails if they drift.
 """
@@ -15,8 +15,8 @@ import torch
 import torch.nn.functional as F
 from PIL import Image
 
-RESIZE = 256
-SIZE = 224
+RESIZE = 384
+SIZE = 336
 MEAN = (0.485, 0.456, 0.406)
 STD = (0.229, 0.224, 0.225)
 
@@ -28,7 +28,7 @@ def resized_shape(height: int, width: int) -> tuple[int, int]:
 
 
 def pixels_to_tensor(rgb: np.ndarray) -> torch.Tensor:
-    """HxWx3 uint8 RGB array -> 3x224x224 normalised float tensor."""
+    """HxWx3 uint8 RGB array -> 3xSIZExSIZE normalised float tensor."""
     x = torch.from_numpy(np.array(rgb, copy=True)).permute(2, 0, 1).float().unsqueeze(0) / 255.0
     h, w = resized_shape(x.shape[2], x.shape[3])
     x = F.interpolate(x, size=(h, w), mode="bilinear", align_corners=False, antialias=False)

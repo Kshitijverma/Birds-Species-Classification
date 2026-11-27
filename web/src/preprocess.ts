@@ -1,12 +1,12 @@
 /**
  * Mirrors training/preprocess.py exactly: plain bilinear resize
  * (align_corners=false, no antialiasing, same as torch.nn.functional.interpolate)
- * so the shorter side is 256 px, centre crop 224x224, then ImageNet mean/std
+ * so the shorter side is 384 px, centre crop 336x336, then ImageNet mean/std
  * normalisation into a CHW Float32Array.
  * test/parity.test.ts fails if the two drift apart.
  */
-export const INPUT_SIZE = 224;
-const RESIZE = 256;
+export const INPUT_SIZE = 336;
+const RESIZE = 384;
 const MEAN = [0.485, 0.456, 0.406];
 const STD = [0.229, 0.224, 0.225];
 

@@ -12,15 +12,15 @@ Measured once, on CUB's 5,794 official test photos, in the same runtime the site
 
 | | |
 |---|---|
-| Named answers that are right | **94.0%** |
-| Photos that get a named answer | 80.4% (the rest get *Can't be sure*, or *Not a bird I know* for 0.6%) |
-| Right species in the top 3 | 95.4% |
-| Top-1 accuracy with no cut-off | 85.5% |
-| Confidence needed to name a species | 0.65 |
-| Calibration error (ECE) | 2.6% (Confidence is on average 2.6 points from how often it's right) |
+| Named answers that are right | **93.1%** |
+| Photos that get a named answer | 85.5% (the rest get *Can't be sure*, or *Not a bird I know* for 0.6%) |
+| Right species in the top 3 | 96.0% |
+| Top-1 accuracy with no cut-off | 86.8% |
+| Confidence needed to name a species | 0.60 |
+| Calibration error (ECE) | 2.0% (Confidence is on average 2.0 points from how often it's right) |
 | Model download | 24 MB (int8), cached after first use |
 
-Each photo is scored together with its mirror image and the two answers averaged. On test that made named answers more accurate (93.7% → 94.0%) for slightly fewer of them (80.7% → 80.4%), at twice the compute per photo. Confidences are calibrated with a temperature fitted on val (1.14); the About page shows a reliability chart.
+Photos are read at 336 px (shorter side resized to 384, centre crop 336). Against the earlier 224 px model, 5 more photos in 100 get a named answer and top-1 is 1.3 points higher, for about 0.4 s more per photo. Averaging each photo with its mirror image is supported (`"flip"` in `labels.json`) but off: at 336 px it doubles the time per photo for little gain. Why, and what else was tried (448 px, ViT-B, fine-tuning), is in [`docs/adr/0002`](docs/adr/0002-raise-input-resolution-to-336.md). Confidences are calibrated with a temperature fitted on val (1.00 at 336 px: the head was already calibrated); the About page shows a reliability chart.
 
 **Not a bird I know.** A photo whose DINOv2 features are further from every species' average than 99% of val photos gets *Not a bird I know* instead of a guess. Of 39 out-of-distribution pictures ([`training/ood.py`](training/ood.py): noise, plain colours, gradients and patterns, plus 22 CC0 iNaturalist photos of insects, frogs, turtles, deer, squirrels, cats, dogs, fungi, leaves, a phone and a roof), 37 got it and 2 (a squirrel, a turtle) got *Can't be sure*; none was named as a bird. It isn't a promise: some non-birds will still get a guess, and a bird outside the 200 usually looks close enough to one of them to get a wrong guess or *Can't be sure*.
 

@@ -28,7 +28,7 @@ from torch.utils.data import DataLoader, Dataset
 
 import cub
 from model import FEATURES, SPECIES, build_backbone, features
-from preprocess import load_eval
+from preprocess import SIZE, load_eval
 
 ROOT = Path(__file__).resolve().parent
 CHECKPOINTS = ROOT / "checkpoints"
@@ -64,7 +64,7 @@ def extract(backbone: nn.Module, items: list[cub.Photo], mirror: bool) -> tuple[
 
 
 def cached(name: str, make) -> tuple[torch.Tensor, torch.Tensor]:
-    path = CHECKPOINTS / f"features-{name}.pt"
+    path = CHECKPOINTS / f"features-{name}-{SIZE}.pt"
     if path.exists():
         return torch.load(path)
     out = make()

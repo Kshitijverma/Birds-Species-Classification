@@ -51,7 +51,7 @@ class SpeciesDistance(nn.Module):
 
 
 class BirdClassifier(nn.Module):
-    """Image [N,3,224,224] -> (Confidences [N,200], Distance [N]), for ONNX export.
+    """Image [N,3,SIZE,SIZE] -> (Confidences [N,200], Distance [N]), for ONNX export.
 
     The softmax and the temperature are built in: the head's weights and bias
     are divided by the temperature.
